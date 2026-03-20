@@ -8,7 +8,7 @@ interface StatCardProps {
   change?: string;
   changeType?: "positive" | "negative" | "warning" | "neutral";
   icon: LucideIcon;
-  iconColor?: string; // class for the icon container
+  iconColor?: string; 
 }
 
 export function StatCard({

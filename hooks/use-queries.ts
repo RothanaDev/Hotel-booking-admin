@@ -4,6 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as api from "@/lib/api"
 import type { Room } from "@/types/room";
 import { addRoom } from "@/lib/api";
+import type { HousekeepingTask, HousekeepingTaskCreate, HousekeepingTaskUpdate } from "@/types/housekeeping";
+import type { MaintenanceTicket, MaintenanceTicketCreate, MaintenanceTicketUpdate } from "@/types/maintenance";
+import type { RoomCalendar, RoomCalendarCreate, RoomCalendarUpdate } from "@/types/roomCalendar";
 
 
 export function useAllUsers() {
@@ -30,6 +33,15 @@ export function useAllRooms() {
     queryFn: api.getAllRooms,
   })
   return { data, isLoading, error }
+}
+
+export function useRoom(roomId: string) {
+  const { data, isLoading, error } = useQuery<Room>({
+    queryKey: ["room", roomId],
+    queryFn: () => api.getRoomById(roomId),
+    enabled: !!roomId,
+  });
+  return { data, isLoading, error };
 }
 
 export function useAllBookings() {
@@ -84,12 +96,10 @@ export function useUpdateRoom() {
   });
 }
 
-export function useBookRoom() {
+export function useCreateBooking() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: ({ roomId, userId, ...bookingData }: { roomId: string; userId: string;[key: string]: any }) =>
-      api.bookRoom({ roomId, userId, ...bookingData }),
+    mutationFn: (bookingData: any) => api.createBooking(bookingData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
@@ -100,9 +110,39 @@ export function useBookRoom() {
   });
 }
 
+export function useUpdateBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, bookingData }: { id: string | number; bookingData: any }) =>
+      api.updateBooking(id, bookingData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["booking"] });
+    },
+  });
+}
+
+export function useBooking(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["booking", id],
+    queryFn: () => api.getBookingById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useDeleteBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
+    },
+  });
+}
+
 export function useCancelBooking() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (bookingId: string) => api.cancelBooking(bookingId),
     onSuccess: () => {
@@ -111,6 +151,58 @@ export function useCancelBooking() {
     },
     onError: (err: unknown) => {
       console.error("Cancel error:", err);
+    },
+  });
+}
+
+/* =======================
+   SERVICE BOOKINGS
+======================= */
+export function useAllServiceBookings() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["all-service-bookings"],
+    queryFn: api.getAllServiceBookings,
+  });
+  return { data, isLoading, error };
+}
+
+export function useServiceBooking(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["service-booking", id],
+    queryFn: () => api.getServiceBookingById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateServiceBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => api.createServiceBooking(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
+    },
+  });
+}
+
+export function useUpdateServiceBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+      api.updateServiceBooking(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["service-booking"] });
+    },
+  });
+}
+
+export function useDeleteServiceBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteServiceBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
     },
   });
 }
@@ -168,5 +260,309 @@ export function useDeleteRoomType() {
   });
 }
 
+/* =======================
+   SERVICES
+======================= */
+export function useAllServices() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["all-services"],
+    queryFn: api.getAllServices,
+  });
+  return { data, isLoading, error };
+}
+
+export function useService(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["service", id],
+    queryFn: () => api.getServiceById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (formData: FormData) => api.createService(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-services"] });
+    },
+  });
+}
+
+export function useUpdateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, formData }: { id: string | number; formData: FormData }) =>
+      api.updateService(id, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-services"] });
+      queryClient.invalidateQueries({ queryKey: ["service"] });
+    },
+  });
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-services"] });
+    },
+  });
+}
+
+/* =======================
+   INVENTORY
+======================= */
+export function useAllInventory() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["all-inventory"],
+    queryFn: api.getAllInventory,
+  });
+  return { data, isLoading, error };
+}
+
+export function useInventory(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["inventory", id],
+    queryFn: () => api.getInventoryById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => api.createInventory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-inventory"] });
+    },
+  });
+}
+
+export function useUpdateInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+      api.updateInventory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
+  });
+}
+
+export function useDeleteInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteInventory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-inventory"] });
+    },
+  });
+}
 
 
+
+export function useAllRoomCalendars() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["room-calendar", "all"],
+    queryFn: api.getAllRoomCalendars,
+  });
+  return { data, isLoading, error };
+}
+
+export function useRoomCalendar(id: number | string) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["room-calendar", id],
+    queryFn: () => api.getRoomCalendarById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useRoomCalendarByRoom(roomId: number | string) {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["room-calendar", "room", roomId],
+    queryFn: () => api.getRoomCalendarByRoom(roomId),
+    enabled: !!roomId,
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateRoomCalendar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: RoomCalendarCreate) => api.createRoomCalendar(payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["room-calendar"] });
+      if (variables?.roomId) {
+        queryClient.invalidateQueries({ queryKey: ["room-calendar", "room", variables.roomId] });
+      }
+    },
+  });
+}
+
+export function useUpdateRoomCalendar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number | string; payload: RoomCalendarUpdate }) =>
+      api.updateRoomCalendar(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["room-calendar"] });
+    },
+  });
+}
+
+export function useDeleteRoomCalendar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => api.deleteRoomCalendar(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["room-calendar"] });
+    },
+  });
+}
+
+export function useHousekeepingTasks(filters?: {
+  roomId?: number | string;
+  assignedToId?: number | string;
+  date?: string;
+  status?: string;
+}) {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["housekeeping-tasks", filters],
+    queryFn: () => api.getAllHousekeepingTasks(filters),
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateHousekeepingTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: HousekeepingTaskCreate) => api.createHousekeepingTask(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["housekeeping-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["room"] });
+    },
+  });
+}
+
+export function useUpdateHousekeepingTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number | string; payload: HousekeepingTaskUpdate }) =>
+      api.updateHousekeepingTask(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["housekeeping-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["room"] });
+    },
+  });
+}
+
+export function useDeleteHousekeepingTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => api.deleteHousekeepingTask(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["housekeeping-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["room"] });
+    },
+  });
+}
+
+export function useHousekeepingTask(id: number | string) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["housekeeping-tasks", id],
+    queryFn: () => api.getHousekeepingTaskById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useMaintenanceTickets(filters?: {
+  roomId?: number | string;
+  reportedById?: number | string;
+  status?: string;
+}) {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["maintenance-tickets", filters],
+    queryFn: () => api.getAllMaintenanceTickets(filters),
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateMaintenanceTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: MaintenanceTicketCreate) => api.createMaintenanceTicket(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maintenance-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["room"] });
+    },
+  });
+}
+
+export function useUpdateMaintenanceTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number | string; payload: MaintenanceTicketUpdate }) =>
+      api.updateMaintenanceTicket(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maintenance-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["room"] });
+    },
+  });
+}
+
+export function useMaintenanceTicket(id: number | string) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["maintenance-tickets", id],
+    queryFn: () => api.getMaintenanceTicketById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useDeleteMaintenanceTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => api.deleteMaintenanceTicket(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maintenance-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["room"] });
+    },
+  });
+}
+
+export function useCreatePaypalOrder() {
+  return useMutation({
+    mutationFn: (bookingId: number | string) => api.createPaypalOrder(bookingId),
+  });
+}
+
+export function usePayCash() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (bookingId: number | string) => api.payCash(bookingId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
+    },
+  });
+}
+
+export function useAllPayments() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["all-payments"],
+    queryFn: api.getAllPayments,
+  });
+  return { data, isLoading, error };
+}

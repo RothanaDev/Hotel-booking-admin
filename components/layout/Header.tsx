@@ -13,8 +13,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [notificationCount, setNotificationCount] = useState(3);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ... (getInitials, getDisplayName, getDisplayEmail, handleLogout, useEffect remain same)
-
   const getInitials = (user: any) => {
     if (!user) return "U";
     const name = user.name || user.email || "";
@@ -88,29 +86,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative hover:bg-gray-100 transition-colors"
-            >
-              <Bell className="h-5 w-5 text-gray-600" />
-              {notificationCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-semibold text-white">
-                  {notificationCount}
-                </span>
-              )}
-            </Button>
-
-            {/* Settings */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-gray-100 transition-colors"
-              onClick={() => router.push("/dashboard/settings")}
-            >
-              <Settings className="h-5 w-5 text-gray-600" />
-            </Button>
+        
 
             {/* User Profile Dropdown */}
             <div className="relative ml-2" ref={dropdownRef}>
@@ -148,29 +124,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     </p>
                   </div>
 
-                  {/* Menu Items */}
-                  <div className="py-2">
-                    <button
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        router.push("/dashboard/profile");
-                      }}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <User className="mr-3 h-4 w-4 text-gray-500" />
-                      My Profile
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        router.push("/dashboard/settings");
-                      }}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Settings className="mr-3 h-4 w-4 text-gray-500" />
-                      Settings
-                    </button>
-                  </div>
+                 
 
                   {/* Logout */}
                   <div className="border-t border-gray-100 pt-2">

@@ -17,7 +17,9 @@ import {
   List,
   PlusCircle,
   LayoutGrid,
-  Hotel,
+  Calendar,
+  Wrench,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -65,8 +67,7 @@ const items = [
     label: "Services",
     subItems: [
       { href: "/service", label: "List service", icon: List },
-      { href: "/service/create", label: "Create service", icon: PlusCircle },
-      { href: "/service/booked", label: "Service Booking", icon: List },
+      { href: "/service/create", label: "Create service", icon: PlusCircle }
     ],
   },
   {
@@ -85,19 +86,29 @@ const items = [
     label: "Room Types",
   },
   {
+    href: "/roomcalendar",
+    icon: Calendar,
+    label: "Room Calendar",
+  },
+  {
+    href: "/housekeepingtask",
+    icon: ClipboardList,
+    label: "Housekeeping",
+  },
+  {
+    href: "/maintenanceticket",
+    icon: Wrench,
+    label: "Maintenance",
+  },
+  {
     href: "/users",
     icon: Users,
     label: "Users",
     subItems: [
-      { href: "/users", label: "All Users", icon: List },
-      { href: "/roles", label: "Roles", icon: Shield },
+      { href: "/users", label: "All Users", icon: List }
     ],
   },
-  {
-    href: "/settings",
-    icon: Settings,
-    label: "Settings",
-  },
+
 ];
 
 const NavItem = ({
@@ -130,7 +141,7 @@ const NavItem = ({
         className={cn(
           "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none cursor-pointer",
           isActive
-            ? "bg-[#ffa500] text-white shadow-lg shadow-orange-500/20"
+            ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/20"
             : "text-white/70 hover:text-white hover:bg-white/5",
           isCollapsed && "justify-center"
         )}
@@ -213,22 +224,22 @@ export function SideBar({
 
       <aside
         className={cn(
-          "sidebar-gradient h-screen sticky top-0 flex flex-col transition-all duration-300 border-r border-sidebar-border z-[70]",
+          "bg-[#0a101f] h-full flex flex-col transition-all duration-300 border-r border-[#1a2235] z-[70]",
           "fixed inset-y-0 left-0 transform md:relative md:translate-x-0",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-          isCollapsed ? "w-[72px]" : "w-64"
+          isCollapsed ? "w-[80px]" : "w-72"
         )}
       >
         {/* Brand Header */}
         <div className={cn(
-          "flex items-center gap-3 px-4 transition-all duration-300 border-b border-white/5",
-          isCollapsed ? "h-20 justify-center" : "h-24"
+          "flex items-center gap-3 px-6 transition-all duration-300 border-b border-white/5 shrink-0",
+          isCollapsed ? "h-24 justify-center" : "h-28"
         )}>
           <div className="relative group shrink-0">
-            <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-amber-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+            <div className="absolute -inset-2 bg-gradient-to-r from-orange-400 to-amber-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
             <div className={cn(
-              "relative rounded-xl bg-white p-1.5 flex items-center justify-center shadow-inner overflow-hidden border border-white/10 transition-all duration-300",
-              isCollapsed ? "h-10 w-10" : "h-12 w-12"
+              "relative rounded-2xl bg-white p-2 flex items-center justify-center shadow-2xl overflow-hidden border border-white/20 transition-all duration-300",
+              isCollapsed ? "h-12 w-12" : "h-14 w-14"
             )}>
               <img
                 src="/images/logo.png"
@@ -240,10 +251,10 @@ export function SideBar({
 
           {!isCollapsed && (
             <div className="animate-in fade-in slide-in-from-left-2 duration-500">
-              <h1 className="text-lg font-black text-white tracking-tighter leading-none">
+              <h1 className="text-xl font-black text-white tracking-tighter leading-none">
                 RNHOTEL
               </h1>
-              <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold mt-1">
+              <p className="text-[10px] text-white/50 uppercase tracking-[0.25em] font-bold mt-1.5">
                 Admin Suite
               </p>
             </div>
@@ -251,7 +262,7 @@ export function SideBar({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto scrollbar-hide">
           {items.map((item) => (
             <NavItem
               key={item.href}
@@ -264,16 +275,19 @@ export function SideBar({
           ))}
         </nav>
 
-        {/* Collapse Toggle */}
-        <div className="p-4 border-t border-white/5">
+        {/* Footer / User Profile or Collapse */}
+        <div className="p-4 border-t border-white/5 bg-black/10 backdrop-blur-sm shrink-0">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="flex items-center justify-center w-full h-12 rounded-xl bg-[#1e293b] text-white hover:bg-[#2d3a4f] transition-all duration-300 shadow-lg border border-white/5"
+            className="flex items-center justify-center w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all duration-300 border border-white/5 group"
           >
             {isCollapsed ? (
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-5 h-5 text-white/70 group-hover:text-white" />
             ) : (
-              <ChevronLeft className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                <ChevronLeft className="w-5 h-5 text-white/70 group-hover:text-white" />
+                <span className="text-xs font-medium text-white/50 group-hover:text-white uppercase tracking-widest"></span>
+              </div>
             )}
           </button>
         </div>

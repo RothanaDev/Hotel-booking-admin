@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '@/lib/api';
+import * as api from '@/lib/api';
+import { loginUser, logoutUser } from '@/lib/api';
 import { isAuthenticated as checkAuth, clearUserStorage, setUserStorage, getUserFromStorage } from '@/lib/auth';
 
 interface AuthContextType {
@@ -22,18 +23,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      if (checkAuth()) {
-        try {
-          const storedUser = getUserFromStorage();
-          if (storedUser) {
-            setUser(storedUser);
-          } else {
-            clearUserStorage();
-          }
-        } catch (err) {
-          console.error('Failed to initialize auth:', err);
+      try {
+        // Fetch fresh user data from backend
+        const me = await api.getMe();
+        if (me) {
+          const userData = {
+            id: me.id,
+            email: me.email,
+            role: me.role,
+            name: me.name || me.email?.split('@')[0] || 'User'
+          };
+          setUserStorage(userData);
+          setUser(userData);
+        } else {
           clearUserStorage();
+          setUser(null);
         }
+      } catch (err) {
+        console.error('Failed to initialize auth:', err);
+        clearUserStorage();
+        setUser(null);
       }
       setLoading(false);
     };
@@ -43,26 +52,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await loginUser({ email, password });
+      // 1. Perform login (sets cookies)
+      await loginUser({ email, password });
 
-      const accessToken = response.accessToken;
+      // 2. Fetch profile data (now that cookies are set)
+      const me = await api.getMe();
 
-      if (accessToken) {
+      if (me) {
         const userData = {
-          id: response.id || response.currentUser, // Use id if available, fallback to currentUser/email
-          email: email,
-          name: response.currentUser?.split('@')[0] || 'User',
-          role: response.role,
-          accessToken: accessToken,
-          refreshToken: response.refreshToken,
-          token: accessToken // backup for old components
+          id: me.id,
+          email: me.email,
+          role: me.role,
+          name: me.name || me.email?.split('@')[0] || 'User',
         };
 
         setUserStorage(userData);
         setUser(userData);
         return { success: true };
       } else {
-        return { success: false, error: 'Invalid response from server' };
+        return { success: false, error: 'Failed to retrieve user profile' };
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
@@ -70,10 +78,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    clearUserStorage();
-    setUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error("Logout error", error);
+    } finally {
+      clearUserStorage();
+      setUser(null);
+      router.push('/login');
+    }
   };
 
   return (

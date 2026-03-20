@@ -1,19 +1,16 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { isAuthenticated } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useProtectedRoute(redirectTo = '/login') {
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const checkAuth = () => {
-      if (!isAuthenticated()) {
-        router.push(redirectTo);
-      }
-    };
-
-    checkAuth();
-  }, [router, redirectTo]);
+    if (!loading && !isAuthenticated) {
+      router.push(redirectTo);
+    }
+  }, [loading, isAuthenticated, router, redirectTo]);
 }

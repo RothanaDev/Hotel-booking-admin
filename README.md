@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hotel Booking Admin Dashboard
 
-## Getting Started
+A modern, responsive, and feature-rich administration panel for hotel management. Built with **Next.js 15 (App Router)**, **React**, **TypeScript**, and **Tailwind CSS**.
 
-First, run the development server:
+## ✨ Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Dashboard Overview**: Get a bird's-eye view of your hotel's performance, revenue, and bookings.
+- **Booking Management**: Seamlessly manage reservations, track statuses, and handle guest requests.
+- **Room Management**: Add, update, and categorize rooms. Set pricing and manage room availability.
+- **Inventory Control**: Track and manage hotel inventory, supplies, and stock levels.
+- **Service Management**: Define and manage extra services (Dining, Wellness, Excursions, Transportation, etc.).
+- **Payment Processing**: View all payment transactions, filter by method (PayPal, Cash), and track total revenues seamlessly.
+- **Maintenance Tracking**: Manage maintenance tickets, assign tasks, and track their resolutions.
+- **Authentication**: Secure login system with role-based routing.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Data Fetching**: [TanStack React Query](https://tanstack.com/query/latest)
+- **Form Handling**: [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
+- **Alerts/Modals**: [SweetAlert2](https://sweetalert2.github.io/)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Getting Started
 
-## Learn More
+### Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js (v18.x or later)
+- npm or yarn or pnpm
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clone the repository** (if applicable) or download the source code.
+2. **Install dependencies**:
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
 
-## Deploy on Vercel
+3. **Set up environment variables**:
+   Create a `.env.local` file in the root directory and add any necessary backend API URLs or keys (e.g., `NEXT_PUBLIC_API_URL`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## 📂 Project Structure
+
+- `/app`: Contains all Next.js routes, layouts, and page components.
+  - `(auth)`: Login and authentication pages.
+  - `(dashboard)`: All protected admin pages (Rooms, Bookings, Payments, etc.).
+- `/components`: Reusable UI components (buttons, inputs, cards, etc.).
+- `/hooks`: Custom React hooks, including React Query mutations and queries (`use-queries.ts`).
+- `/lib`: Utility functions and Zod validation schemas.
+- `/types`: TypeScript type definitions and interfaces.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License.

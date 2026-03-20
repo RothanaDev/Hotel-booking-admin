@@ -59,7 +59,8 @@ const DashboardContent = () => {
   const recentBookings = [...bookings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
 
   const statusColors: Record<string, string> = {
-    confirmed: "bg-emerald-100 text-emerald-700 border-transparent rounded-full px-3",
+    paid: "bg-emerald-100 text-emerald-700 border-transparent rounded-full px-3",
+    	completed: "bg-emerald-100 text-emerald-700 border-transparent rounded-full px-3",
     pending: "bg-amber-100 text-amber-700 border-transparent rounded-full px-3",
     cancelled: "bg-rose-100 text-rose-700 border-transparent rounded-full px-3",
     "checked-in": "bg-orange-100 text-orange-700 border-transparent rounded-full px-3",
@@ -130,7 +131,7 @@ const DashboardContent = () => {
       {/* Header */}
          <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, John! Here's what's happening today.</p>
+        <p className="text-muted-foreground ">Welcome back, Rothana! Here's what's happening today.</p>
       </div>
 
       {/* Stats Grid */}
@@ -154,7 +155,7 @@ const DashboardContent = () => {
         <StatCard
           title="Total Revenue"
           value={`$${totalRevenue.toLocaleString()}`}
-          change="+12.5% from last month"
+    
           changeType="positive"
           icon={DollarSign}
           iconColor="bg-rose-50 text-rose-600"
@@ -272,22 +273,22 @@ const DashboardContent = () => {
                       <TableCell className="font-medium">#{booking.id.toString().padStart(4, "0")}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium font-bold">
                             {guest?.name?.charAt(0) || "G"}
                           </div>
                           {guest?.name || "Guest"}
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{guest?.email || "No email"}</TableCell>
-                      <TableCell>{room?.roomType?.typeName || "Unknown"}</TableCell>
-                      <TableCell>{formatDate(booking.checkin)}</TableCell>
-                      <TableCell>{formatDate(booking.checkout)}</TableCell>
+                      <TableCell className=" font-medium">{guest?.email || "No email"}</TableCell>
+                      <TableCell className="font-medium">{room?.roomType?.typeName || "Unknown"}</TableCell>
+                      <TableCell className="font-medium">{formatDate(booking.checkin)}</TableCell>
+                      <TableCell className="font-medium">{formatDate(booking.checkout)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={statusColors[bookingStatus] || "bg-muted/10 text-muted-foreground border-muted"}>
                           {bookingStatus}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-medium text-blue-600 font-bold">
                         ${(booking.amount || 0).toLocaleString()}
                       </TableCell>
                     </TableRow>

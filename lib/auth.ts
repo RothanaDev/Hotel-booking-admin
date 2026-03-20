@@ -1,81 +1,70 @@
-export const setUserStorage = (user: any) => {
-  if (typeof window === "undefined") return
 
-  // Create a safe user object without tokens for general storage
-  const safeUser = {
-    id: user.id || user.userId || user._id,
+"use client";
+
+import * as api from "@/lib/api";
+
+type SafeUser = {
+  id?: number | string;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+export const setUserStorage = (user: SafeUser) => {
+  if (typeof window === "undefined") return;
+
+  const safeUser: SafeUser = {
+    id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
   };
 
-  localStorage.setItem("currentUser", JSON.stringify(safeUser))
-  localStorage.setItem("role", user.role || "")
+  localStorage.setItem("currentUser", JSON.stringify(safeUser));
+  if (safeUser.role) localStorage.setItem("role", safeUser.role);
 
-  if (user.accessToken) {
-    localStorage.setItem("accessToken", user.accessToken)
-    document.cookie = `token=${user.accessToken}; path=/; max-age=86400; SameSite=Strict`
-  }
-
-  if (user.refreshToken) {
-    localStorage.setItem("refreshToken", user.refreshToken)
-  }
-}
-// export const setUserStorage = (user: any) => {
-//   if (typeof window === 'undefined') return;
-
-//   const safeUser = {
-//     id: user.id ?? user.userId ?? user._id,
-//     name: user.name ?? null,      // optional
-//     email: user.email ?? null,    // optional
-//     role: user.role ?? null,
-//   };
-
-//   localStorage.setItem('currentUser', JSON.stringify(safeUser));
-
-//   if (user.token) {
-//     localStorage.setItem('token', user.token);
-//     document.cookie = `token=${user.token}; path=/; max-age=86400; SameSite=Strict`;
-//   }
-// };
-
+  // Set a non-http-only cookie so proxy.ts knows the user is logged in
+  document.cookie = "is_logged_in=1; path=/; max-age=604800"; // 7 days
+};
 
 export const clearUserStorage = () => {
-  if (typeof window === "undefined") return
-  localStorage.removeItem("currentUser")
-  localStorage.removeItem("accessToken")
-  localStorage.removeItem("refreshToken")
-  localStorage.removeItem("role")
-  localStorage.removeItem("token") // for backward compatibility
-  document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-}
+  if (typeof window === "undefined") return;
 
-export const isAuthenticated = () => {
-  if (typeof window === "undefined") return false
-  const token = localStorage.getItem("accessToken") || localStorage.getItem("token")
-  return !!token
-}
+  localStorage.removeItem("currentUser");
+  localStorage.removeItem("role");
 
-export const getAccessToken = () => {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("accessToken") || localStorage.getItem("token")
-}
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("token");
+  document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "is_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+};
 
-export const getRefreshToken = () => {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("refreshToken")
-}
+export const isAuthenticated = async () => {
+  try {
+    const me = await api.getMe();
+    return !!me;
+  } catch (err) {
+    return false;
+  }
+};
 
 export const getUserFromStorage = () => {
-  if (typeof window === "undefined") return null
-  const userStr = localStorage.getItem("currentUser")
-  return userStr ? JSON.parse(userStr) : null
-}
+  if (typeof window === "undefined") return null;
+  const userStr = localStorage.getItem("currentUser");
+  return userStr ? JSON.parse(userStr) : null;
+};
 
 export const getUserId = () => {
-  const user = getUserFromStorage()
-  console.log("User from getUserId:", user)
+  const user = getUserFromStorage();
+  if (!user) return null;
+  return user.id || null;
+};
 
-  if (!user) return null
-  return user.id || user.userId || user._id || null
-}
+export const logout = async () => {
+  try {
+    await api.logoutUser();
+  } finally {
+    clearUserStorage();
+    if (typeof window !== "undefined") window.location.href = "/login";
+  }
+};
