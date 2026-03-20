@@ -1,6 +1,8 @@
 // src/lib/api.ts
-import axios, { AxiosError } from "axios";
-import type { AuthUser } from "@/types/auth";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { AuthUser, LoginRequest } from "@/types/auth";
+import { RoomTypeFormValues } from "./validator/room-type";
+import { BookingCreateRequest, BookingUpdateRequest } from "@/types/booking";
 import type { Room } from "@/types/room";
 import type {
   HousekeepingTask,
@@ -26,7 +28,6 @@ const api = axios.create({
   withCredentials: true, 
 });
 
-
 let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
@@ -37,7 +38,7 @@ async function refreshSession(): Promise<void> {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest: any = error.config;
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const status = error.response?.status;
 
     if (!originalRequest) return Promise.reject(error);
@@ -83,7 +84,7 @@ api.interceptors.response.use(
    AUTH
  ======================= */
 
-export async function loginUser(loginDetails: { email: string; password: string }) {
+export async function loginUser(loginDetails: LoginRequest) {
   const res = await api.post("/api/v1/auth/login", loginDetails, {
     validateStatus: (s) => s < 500,
   });
@@ -95,7 +96,7 @@ export async function loginUser(loginDetails: { email: string; password: string 
   return res.data;
 }
 
-export async function registerUser(registrationDetails: any) {
+export async function registerUser(registrationDetails: Record<string, unknown>) {
   const res = await api.post("/api/v1/auth/register", registrationDetails, {
     validateStatus: (s) => s < 500,
   });
@@ -117,8 +118,8 @@ export async function getMe() {
   try {
     const res = await api.get("/api/v1/auth/me");
     return res.data;
-  } catch (error: any) {
-    if (error.response?.status === 401) {
+  } catch (error: unknown) {
+    if ((error as AxiosError).response?.status === 401) {
       return null;
     }
     throw error; 
@@ -127,26 +128,26 @@ export async function getMe() {
 
 /* =======================
    USERS
-======================= */
+ ======================= */
 
 export async function getAllUsers() {
   const { data } = await api.get("/api/v1/auth/all");
   return data;
 }
 
-export async function getUser(userId: string): Promise<AuthUser> {
-  const { data } = await api.get(`/api/v1/auth/${userId}`);
+export async function getUser(userId: string | number): Promise<AuthUser> {
+  const { data } = await api.get(`/api/v1/users/get-user/${userId}`);
   return data;
 }
 
-export async function deleteUser(userId: string) {
+export async function deleteUser(userId: string | number) {
   const { data } = await api.delete(`/api/v1/users/delete/${userId}`);
   return data;
 }
 
 /* =======================
    ROOMS
-======================= */
+ ======================= */
 
 export async function addRoom(formData: FormData) {
   const { data } = await api.post("/api/v1/rooms/create", formData, {
@@ -184,7 +185,7 @@ export async function updateRoom(roomId: string, formData: FormData) {
 
 /* =======================
    ROOM TYPES
-======================= */
+ ======================= */
 
 export async function getAllRoomTypes() {
   try {
@@ -196,12 +197,12 @@ export async function getAllRoomTypes() {
   }
 }
 
-export async function createRoomType(roomTypeData: any) {
+export async function createRoomType(roomTypeData: RoomTypeFormValues) {
   const { data } = await api.post("/api/v1/roomTypes", roomTypeData);
   return data;
 }
 
-export async function updateRoomType(id: string | number, roomTypeData: any) {
+export async function updateRoomType(id: string | number, roomTypeData: RoomTypeFormValues) {
   const { data } = await api.put(`/api/v1/roomTypes/${id}`, roomTypeData);
   return data;
 }
@@ -213,14 +214,14 @@ export async function deleteRoomType(id: string | number) {
 
 /* =======================
    BOOKINGS
-======================= */
+ ======================= */
 
-export async function createBooking(booking: any) {
+export async function createBooking(booking: BookingCreateRequest) {
   const { data } = await api.post("/api/v1/bookings/create", booking);
   return data;
 }
 
-export async function updateBooking(id: string | number, bookingData: any) {
+export async function updateBooking(id: string | number, bookingData: BookingUpdateRequest) {
   const { data } = await api.put(`/api/v1/bookings/${id}`, bookingData);
   return data;
 }
@@ -245,7 +246,7 @@ export async function deleteBooking(id: string | number) {
   return data;
 }
 
-export async function getUserBookings(userId: string) {
+export async function getUserBookings(userId: string | number) {
   const { data } = await api.get(`/api/v1/users/get-user-bookings/${userId}`);
   return data;
 }
@@ -259,15 +260,15 @@ export async function cancelBooking(bookingId: string) {
   try {
     const { data } = await api.get(`/api/v1/bookings/cancel/${bookingId}`);
     return data;
-  } catch (error: any) {
-    console.error("Cancel booking error:", error.response?.data);
+  } catch (error: unknown) {
+    console.error("Cancel booking error:", (error as AxiosError).response?.data);
     throw error;
   }
 }
 
 /* =======================
    SERVICE BOOKINGS
-======================= */
+ ======================= */
 
 export async function getAllServiceBookings() {
   try {
@@ -284,12 +285,12 @@ export async function getServiceBookingById(id: string | number) {
   return data;
 }
 
-export async function createServiceBooking(payload: any) {
+export async function createServiceBooking(payload: Record<string, unknown>) {
   const { data } = await api.post("/api/v1/booking_services/create", payload);
   return data;
 }
 
-export async function updateServiceBooking(id: string | number, payload: any) {
+export async function updateServiceBooking(id: string | number, payload: Record<string, unknown>) {
   const { data } = await api.put(`/api/v1/booking_services/update/${id}`, payload);
   return data;
 }
@@ -301,7 +302,7 @@ export async function deleteServiceBooking(id: string | number) {
 
 /* =======================
    SERVICES
-======================= */
+ ======================= */
 
 export async function getAllServices() {
   try {
@@ -339,7 +340,7 @@ export async function deleteService(id: string | number) {
 
 /* =======================
    INVENTORY
-======================= */
+ ======================= */
 
 export async function getAllInventory() {
   try {
@@ -356,12 +357,12 @@ export async function getInventoryById(id: string | number) {
   return data;
 }
 
-export async function createInventory(payload: any) {
+export async function createInventory(payload: Record<string, unknown>) {
   const { data } = await api.post("/api/v1/inventory/create", payload);
   return data;
 }
 
-export async function updateInventory(id: string | number, payload: any) {
+export async function updateInventory(id: string | number, payload: Record<string, unknown>) {
   const { data } = await api.put(`/api/v1/inventory/update/${id}`, payload);
   return data;
 }
@@ -373,7 +374,7 @@ export async function deleteInventory(id: string | number) {
 
 /* =======================
    ROOM CALENDAR
-======================= */
+ ======================= */
 
 export async function getAllRoomCalendars(): Promise<RoomCalendar[]> {
   const { data } = await api.get(`/api/v1/room-calendar`);
@@ -419,7 +420,7 @@ export async function deleteRoomCalendar(id: number | string) {
 
 /* =======================
    HOUSEKEEPING TASKS
-======================= */
+ ======================= */
 
 export async function getAllHousekeepingTasks(params?: {
   roomId?: number | string;
@@ -453,7 +454,7 @@ export async function deleteHousekeepingTask(id: number | string) {
 
 /* =======================
    MAINTENANCE TICKETS
-======================= */
+ ======================= */
 
 export async function getAllMaintenanceTickets(params?: {
   roomId?: number | string;
@@ -485,7 +486,7 @@ export async function deleteMaintenanceTicket(id: number | string) {
 }
 /* =======================
    PAYPAL PAYMENTS
-======================= */
+ ======================= */
 
 
 export async function createPaypalOrder(bookingId: number | string): Promise<PaypalCreateOrderResponse> {

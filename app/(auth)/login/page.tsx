@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Lock, AlertCircle, CheckCircle, Eye, EyeOff, X } from "lucide-react";
-import * as api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import Image from "next/image";
 
 export default function LoginPage() {
   const { login: performLogin } = useAuth();
@@ -37,8 +37,8 @@ export default function LoginPage() {
       } else {
         setError(result.error || "Login failed. Please check your credentials.");
       }
-    } catch (err: any) {
-      setError(err?.message || "An unexpected error occurred.");
+    } catch (err: unknown) {
+      setError((err as { message?: string })?.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ export default function LoginPage() {
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative h-24 w-24 rounded-2xl bg-white p-2 flex items-center justify-center shadow-inner overflow-hidden border border-gray-100">
-                <img src="/images/logo.png" alt="RN HOTEL Logo" className="w-full h-full object-contain" />
+                <Image src="/images/logo.png" alt="RN HOTEL Logo" width={96} height={96} className="w-full h-full object-contain" />
               </div>
             </div>
           </div>

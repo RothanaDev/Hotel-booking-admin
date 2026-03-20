@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Save, X, ChevronDown, DollarSign, Info } from "lucide-react"
 import { toast } from "sonner"
 import type { RoomCalendarCreate } from "@/types/roomCalendar"
+import type { Room } from "@/types/room"
 
 export default function CreateRoomCalendarPage() {
     const router = useRouter()
@@ -37,7 +38,7 @@ export default function CreateRoomCalendarPage() {
             await createMutation.mutateAsync(formData)
             toast.success("Calendar entry created successfully")
             router.push("/roomcalendar")
-        } catch (error) {
+        } catch {
             toast.error("Failed to create calendar entry. This date might already have an override.")
         }
     }
@@ -82,8 +83,9 @@ export default function CreateRoomCalendarPage() {
                                         className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none cursor-pointer font-medium"
                                     >
                                         <option value={0} disabled>Choose a room...</option>
-                                        {rooms?.map((room) => (
+                                        {rooms?.map((room: Room) => (
                                             <option key={room.id} value={room.id}>
+                                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                                 Room #{room.id} - {typeof room.roomType === 'string' ? room.roomType : (room.roomType as any)?.typeName}
                                             </option>
                                         ))}
@@ -206,7 +208,7 @@ export default function CreateRoomCalendarPage() {
     )
 }
 
-function Loader2(props: any) {
+function Loader2(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg
             {...props}

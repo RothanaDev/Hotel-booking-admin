@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { BedDouble, Image as ImageIcon, X, Upload, Save, Loader2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Swal from "sweetalert2";
+import Image from "next/image";
+import type { Room } from "@/types/room";
+import type { RoomType } from "@/types/room-type";
 
 export default function EditRoomPage() {
     const router = useRouter();
@@ -16,7 +19,7 @@ export default function EditRoomPage() {
     const roomId = params?.id as string;
 
     const { data: room, isLoading: isLoadingRoom } = useRoom(roomId);
-    const { data: roomTypes = [] } = useAllRoomTypes();
+    const { data: roomTypes = [] as RoomType[] } = useAllRoomTypes();
     const updateRoomMutation = useUpdateRoom();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,35 +35,39 @@ export default function EditRoomPage() {
         imagePreview: "",
     });
 
-    useEffect(() => {
-        if (room) {
-            let resolvedTypeId = "";
+    // Track if we've initialized the form with room data
+    const [lastRoomId, setLastRoomId] = useState<string | number | null>(null);
 
-            // Attempt to resolve roomTypeId
-            if (typeof room.roomType === 'object' && room.roomType?.id) {
-                resolvedTypeId = String(room.roomType.id);
-            } else if (room.roomTypeId) {
-                resolvedTypeId = String(room.roomTypeId);
-            } else if (typeof room.roomType === 'string' && roomTypes.length > 0) {
-                // Fallback: if roomType is a name string, try to find matching ID from roomTypes
-                const found = roomTypes.find((rt: any) => rt.typeName === room.roomType);
-                if (found) resolvedTypeId = String(found.id);
-            }
-
-            // Determine image preview
-            let preview = "";
-            if (room.image) preview = room.image;
-            else if (room.photo) preview = `data:image/jpeg;base64,${room.photo}`;
-            else if (room.roomPhotoUrl) preview = room.roomPhotoUrl;
-
-            setFormData((prev) => ({
-                ...prev,
-                roomTypeId: resolvedTypeId || prev.roomTypeId, // Keep existing if resolution fails but maybe user selected something? actually cleaner to just set it.
-                status: room.status || (room.booked ? "Occupied" : "Available"),
-                imagePreview: preview || prev.imagePreview,
-            }));
+    // Sync room data to form state during render to avoid useEffect cascading renders
+    if (room && room.id !== lastRoomId) {
+        const roomData = room as Room;
+        const types = roomTypes as RoomType[];
+        
+        let resolvedTypeId = "";
+        const rt = roomData.roomType as string | { id: string | number; typeName: string };
+        
+        if (rt && typeof rt === 'object' && 'id' in rt) {
+            resolvedTypeId = String(rt.id);
+        } else if (roomData.roomTypeId) {
+            resolvedTypeId = String(roomData.roomTypeId);
+        } else if (typeof rt === 'string' && types.length > 0) {
+            const found = types.find((t: RoomType) => t.typeName === rt);
+            if (found) resolvedTypeId = String(found.id);
         }
-    }, [room, roomTypes]);
+
+        let preview = "";
+        if (roomData.image) preview = roomData.image;
+        else if (roomData.photo) preview = `data:image/jpeg;base64,${roomData.photo}`;
+        else if (roomData.roomPhotoUrl) preview = roomData.roomPhotoUrl;
+
+        setFormData({
+            roomTypeId: resolvedTypeId,
+            status: roomData.status || (roomData.booked ? "Occupied" : "Available"),
+            imageFile: null,
+            imagePreview: preview,
+        });
+        setLastRoomId(room.id);
+    }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -135,11 +142,12 @@ export default function EditRoomPage() {
                 customClass: { popup: 'rounded-xl' }
             });
             router.push("/room");
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Update failed:", error);
+            const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to update room.";
             Swal.fire({
                 title: "Error!",
-                text: "Failed to update room.",
+                text: errorMessage,
                 icon: "error",
                 confirmButtonColor: "#ffa500",
                 customClass: { popup: 'rounded-xl' }
@@ -209,8 +217,8 @@ export default function EditRoomPage() {
                                             onChange={handleInputChange}
                                         >
                                             <option value="" disabled>Select a room type...</option>
-                                            {roomTypes.map((type: any) => (
-                                                <option key={type.id} value={type.id}>
+                                            {(roomTypes as RoomType[]).map((type: RoomType) => (
+                                                <option key={type.id} value={type.id.toString()}>
                                                     {type.typeName} - ${type.price}/night
                                                 </option>
                                             ))}
@@ -262,7 +270,7 @@ export default function EditRoomPage() {
                                 </div>
 
                                 <div
-                                    className="space-y-3 cursor-pointer"
+                                    className="space-y-3 cursor-pointer h-full flex flex-col"
                                     onClick={() => fileInputRef.current?.click()}
                                     onDragOver={handleDragOver}
                                     onDrop={handleDrop}
@@ -285,9 +293,10 @@ export default function EditRoomPage() {
                                     >
                                         {formData.imagePreview ? (
                                             <>
-                                                <img
+                                                <Image
                                                     src={formData.imagePreview}
                                                     alt="Preview"
+                                                    fill
                                                     className="absolute inset-0 w-full h-full object-cover"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">

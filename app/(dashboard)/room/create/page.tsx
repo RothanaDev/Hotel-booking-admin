@@ -11,10 +11,12 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
 import { createRoomSchema, type CreateRoomFormValues } from "@/lib/validator/room";
+import Image from "next/image";
+import type { RoomType } from "@/types/room-type";
 
 export default function CreateRoomPage() {
   const router = useRouter();
-  const { data: roomTypes = [] } = useAllRoomTypes();
+  const { data: roomTypes = [] as RoomType[] } = useAllRoomTypes();
   const addRoomMutation = useAddRoom();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -26,13 +28,14 @@ export default function CreateRoomPage() {
     watch,
     formState: { errors },
   } = useForm<CreateRoomFormValues>({
-    resolver: zodResolver(createRoomSchema as any),
+    resolver: zodResolver(createRoomSchema),
     defaultValues: {
       roomTypeId: "",
       status: "Available",
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedImage = watch("image");
   const watchedStatus = watch("status");
 
@@ -83,10 +86,11 @@ export default function CreateRoomPage() {
         customClass: { popup: 'rounded-xl' }
       });
       router.push("/room");
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to create room.";
       Swal.fire({
         title: "Error!",
-        text: "Failed to create room.",
+        text: errorMessage,
         icon: "error",
         confirmButtonColor: "#ffa500",
         customClass: { popup: 'rounded-xl' }
@@ -145,7 +149,7 @@ export default function CreateRoomPage() {
                         className={`w-full h-12 rounded-xl border-2 transition-all outline-none appearance-none cursor-pointer px-4 text-sm ${errors.roomTypeId ? 'border-rose-500 bg-rose-50/30' : 'border-slate-200 bg-slate-50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10'}`}
                       >
                         <option value="" disabled>Select a room type...</option>
-                        {roomTypes.map((type: any) => (
+                        {(roomTypes as RoomType[]).map((type: RoomType) => (
                           <option key={type.id} value={type.id.toString()}>
                             {type.typeName} - ${type.price}/night
                           </option>
@@ -219,9 +223,10 @@ export default function CreateRoomPage() {
                   >
                     {imagePreview ? (
                       <>
-                        <img
+                        <Image
                           src={imagePreview}
                           alt="Preview"
+                          fill
                           className="absolute inset-0 w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
@@ -264,4 +269,4 @@ export default function CreateRoomPage() {
       </div>
     </div>
   );
-}
+}

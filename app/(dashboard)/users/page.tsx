@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAllUsers, useDeleteUser } from "@/hooks/use-queries";
+import type { User } from "@/types/user";
 import {
   Table,
   TableBody,
@@ -57,7 +58,7 @@ export default function UsersPage() {
       try {
         await deleteMutation.mutateAsync(userId);
         Swal.fire("Deleted!", "User has been deleted.", "success");
-      } catch (error) {
+      } catch {
         Swal.fire("Error", "Failed to delete user.", "error");
       }
     }
@@ -98,7 +99,7 @@ export default function UsersPage() {
           </TableHeader>
 
           <TableBody>
-            {paginatedUsers.map((u: any) => (
+            {(paginatedUsers as User[]).map((u: User) => (
               <TableRow
                 key={u.id}
                 className="hover:bg-gray-50 transition-colors"
@@ -141,7 +142,7 @@ export default function UsersPage() {
                       variant="ghost"
                       size="icon"
                       className="text-gray-400 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => handleDelete(u.id, u.name)}
+                      onClick={() => handleDelete(String(u.id), u.name || "")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

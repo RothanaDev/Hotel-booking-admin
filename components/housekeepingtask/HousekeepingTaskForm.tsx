@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ClipboardList, User as UserIcon, Calendar, CheckCircle, Clock, Save, Info, AlertCircle } from "lucide-react";
+import { ClipboardList, Calendar, Users as UserIcon, Clock, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { HousekeepingTask, HousekeepingTaskCreate, HousekeepingTaskUpdate } from "@/types/housekeeping";
+import type { Room } from "@/types/room";
+import type { User } from "@/types/user";
 
 interface HousekeepingTaskFormProps {
     initialData?: HousekeepingTask;
@@ -32,7 +34,7 @@ export default function HousekeepingTaskForm({ initialData, isEdit }: Housekeepi
         remarks: initialData?.remarks || "",
     });
 
-    const selectedRoom = rooms.find((r: any) => r.id.toString() === formData.roomId);
+    const selectedRoom = (rooms as Room[]).find((r: Room) => r.id.toString() === formData.roomId);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,6 +49,7 @@ export default function HousekeepingTaskForm({ initialData, isEdit }: Housekeepi
                 const payload: HousekeepingTaskUpdate = {
                     assignedToId: parseInt(formData.assignedToId),
                     taskDate: formData.taskDate,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     status: formData.status as any,
                     remarks: formData.remarks,
                 };
@@ -65,6 +68,7 @@ export default function HousekeepingTaskForm({ initialData, isEdit }: Housekeepi
                     roomId: parseInt(formData.roomId),
                     assignedToId: parseInt(formData.assignedToId),
                     taskDate: formData.taskDate,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     status: formData.status as any,
                     remarks: formData.remarks,
                 };
@@ -116,7 +120,7 @@ export default function HousekeepingTaskForm({ initialData, isEdit }: Housekeepi
                                     disabled={isEdit}
                                 >
                                     <option value="" disabled>Choose a Room...</option>
-                                    {rooms.map((room: any) => (
+                                    {rooms.map((room: Room) => (
                                         <option key={room.id} value={room.id}>
                                             Room {room.id} — {room.status}
                                         </option>
@@ -143,9 +147,10 @@ export default function HousekeepingTaskForm({ initialData, isEdit }: Housekeepi
                                     required
                                 >
                                     <option value="" disabled>Select Staff Member...</option>
-                                    {users.map((u: any) => (
+                                    {users.map((u: User) => (
                                         <option key={u.id} value={u.id}>
-                                            {u.name || u.username || u.email} (ID: {u.id})
+                                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                            {u.name || (u as any).username || u.email} (ID: {u.id})
                                         </option>
                                     ))}
                                 </select>
@@ -182,6 +187,7 @@ export default function HousekeepingTaskForm({ initialData, isEdit }: Housekeepi
                                     id="status"
                                     className="w-full h-16 rounded-2xl border-2 border-slate-100 bg-slate-50 px-6 text-sm font-bold outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500/50 transition-all appearance-none cursor-pointer"
                                     value={formData.status}
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                                 >
                                     <option value="PENDING">PENDING (Dirty)</option>

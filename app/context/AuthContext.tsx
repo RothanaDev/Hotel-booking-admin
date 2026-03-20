@@ -4,10 +4,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as api from '@/lib/api';
 import { loginUser, logoutUser } from '@/lib/api';
-import { isAuthenticated as checkAuth, clearUserStorage, setUserStorage, getUserFromStorage } from '@/lib/auth';
+import { clearUserStorage, setUserStorage } from '@/lib/auth';
+import { AuthUser } from '@/types/auth';
 
 interface AuthContextType {
-  user: any;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -17,7 +18,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -27,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch fresh user data from backend
         const me = await api.getMe();
         if (me) {
-          const userData = {
+          const userData: AuthUser = {
             id: me.id,
             email: me.email,
             role: me.role,
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const me = await api.getMe();
 
       if (me) {
-        const userData = {
+        const userData: AuthUser = {
           id: me.id,
           email: me.email,
           role: me.role,
@@ -72,8 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         return { success: false, error: 'Failed to retrieve user profile' };
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed. Please try again.';
       return { success: false, error: errorMessage };
     }
   };
@@ -111,4 +112,4 @@ export function useAuthContext() {
     throw new Error('useAuthContext must be used within an AuthProvider');
   }
   return context;
-}
+}

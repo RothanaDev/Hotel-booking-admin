@@ -35,7 +35,7 @@ export interface CreateServiceFormValues {
     description?: string;
     price: number;
     category: string;
-    image: any;
+    image: File;
 }
 
 export interface UpdateServiceFormValues {
@@ -43,5 +43,5 @@ export interface UpdateServiceFormValues {
     description?: string;
     price: number;
     category: string;
-    image?: any;
+    image?: File;
 }

@@ -7,7 +7,6 @@ import {
   Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   BarChart,
@@ -17,21 +16,23 @@ import { Badge } from "@/components/ui/badge";
 import { useAllRooms, useAllBookings } from "@/hooks/use-queries";
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { Room } from "@/types/room";
+import type { Booking } from "@/types/booking";
 
 const DashboardContent = () => {
 
-  const { data: rooms = [], isLoading: roomsLoading } = useAllRooms();
-  const { data: bookings = [], isLoading: bookingsLoading } = useAllBookings();
+  const { data: rooms = [] as Room[], isLoading: roomsLoading } = useAllRooms();
+  const { data: bookings = [] as Booking[], isLoading: bookingsLoading } = useAllBookings();
 
   const isLoading = bookingsLoading || roomsLoading;
-  const availableRooms = rooms.filter((room: any) => room.status?.toLowerCase() === "available").length;
-  const totalBookings = bookings.length;
-  const totalRevenue = bookings.reduce((acc: number, booking: any) => {
+  const availableRooms = (rooms as Room[]).filter((room: Room) => room.status?.toLowerCase() === "available").length;
+  const totalBookings = (bookings as Booking[]).length;
+  const totalRevenue = (bookings as Booking[]).reduce((acc: number, booking: Booking) => {
     return acc + (booking.amount || 0);
   }, 0);
 
-  const totalGuests = bookings.reduce((sum: number, booking: any) => sum + (booking.totalNumOfGuest || 0), 0);
-  const pendingBookings = bookings.filter((booking: any) => booking.status === "pending").length;
+  const totalGuests = (bookings as Booking[]).reduce((sum: number, booking: Booking) => sum + (booking.totalNumOfGuest || 0), 0);
+  const pendingBookings = (bookings as Booking[]).filter((booking: Booking) => booking.status === "pending").length;
 
   const generateMonthlyStats = () => {
     const stats = [];
@@ -41,14 +42,14 @@ const DashboardContent = () => {
       const d = new Date(currentYear, i, 1);
       const monthLabel = format(d, 'MMM');
 
-      const monthBookings = bookings.filter((b: any) => {
+      const monthBookings = (bookings as Booking[]).filter((b: Booking) => {
         const bDate = new Date(b.checkin);
         return bDate.getMonth() === i && bDate.getFullYear() === currentYear;
       });
 
       stats.push({
         month: monthLabel,
-        revenue: monthBookings.reduce((acc: number, b: any) => acc + (b.amount || 0), 0),
+        revenue: monthBookings.reduce((acc: number, b: Booking) => acc + (b.amount || 0), 0),
         bookings: monthBookings.length,
       });
     }
@@ -56,7 +57,7 @@ const DashboardContent = () => {
   };
 
   const monthlyStats = generateMonthlyStats();
-  const recentBookings = [...bookings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+  const recentBookings = [...(bookings as Booking[])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
 
   const statusColors: Record<string, string> = {
     paid: "bg-emerald-100 text-emerald-700 border-transparent rounded-full px-3",
@@ -71,7 +72,7 @@ const DashboardContent = () => {
     try {
       if (!dateString) return "N/A";
       return format(new Date(dateString), 'MMM d, yyyy');
-    } catch (e) {
+    } catch {
       return dateString;
     }
   };
@@ -131,7 +132,7 @@ const DashboardContent = () => {
       {/* Header */}
          <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground ">Welcome back, Rothana! Here's what's happening today.</p>
+        <p className="text-muted-foreground ">Welcome back, Rothana! Here&apos;s what&apos;s happening today.</p>
       </div>
 
       {/* Stats Grid */}
@@ -263,7 +264,7 @@ const DashboardContent = () => {
             </TableHeader>
             <TableBody>
               {recentBookings.length > 0 ? (
-                recentBookings.map((booking: any) => {
+                recentBookings.map((booking: Booking) => {
                   const guest = booking.userResponse;
                   const room = booking.roomResponse;
                   const bookingStatus = booking.status || "pending";

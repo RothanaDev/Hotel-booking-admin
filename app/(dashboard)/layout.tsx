@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { SideBar } from "@/components/layout/Sidebar";
-import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,

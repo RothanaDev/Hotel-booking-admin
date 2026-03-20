@@ -38,6 +38,8 @@ import {
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
+import type { RoomCalendar } from "@/types/roomCalendar"
+import type { Room } from "@/types/room"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -63,9 +65,9 @@ export default function RoomCalendarPage() {
 
     const filteredEntries = useMemo(() => {
         if (!calendarEntries) return []
-        return (calendarEntries as any[]).filter(entry => {
+        return (calendarEntries as RoomCalendar[]).filter(entry => {
             const matchesSearch =
-                entry.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (entry.note || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
                 entry.roomId.toString().includes(searchQuery) ||
                 format(new Date(entry.date), "PPP").toLowerCase().includes(searchQuery.toLowerCase())
             return matchesSearch
@@ -79,7 +81,7 @@ export default function RoomCalendarPage() {
                 payload: { isAvailable: !currentAvailable }
             })
             toast.success(`Room marked as ${!currentAvailable ? 'available' : 'unavailable'}`)
-        } catch (error) {
+        } catch {
             toast.error("Failed to update availability")
         }
     }
@@ -89,7 +91,7 @@ export default function RoomCalendarPage() {
         try {
             await deleteCalendar.mutateAsync(id)
             toast.success("Override deleted successfully")
-        } catch (error) {
+        } catch {
             toast.error("Failed to delete override")
         }
     }
@@ -129,9 +131,10 @@ export default function RoomCalendarPage() {
                         className="w-full h-12 pl-11 pr-4 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-slate-900/10 appearance-none cursor-pointer font-bold shadow-sm transition-all"
                     >
                         <option value="ALL">All Rooms</option>
-                        {rooms?.map((room) => (
+                        {rooms?.map((room: Room) => (
                             <option key={room.id} value={room.id}>
-                                Room #{room.id} ({typeof room.roomType === 'string' ? room.roomType : (room.roomType as any)?.typeName})
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                Room #{room.id} ({typeof room.roomType === 'string' ? room.roomType : (room.roomType as any).typeName})
                             </option>
                         ))}
                     </select>
@@ -179,7 +182,7 @@ export default function RoomCalendarPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredEntries.map((entry: any) => (
+                                    {filteredEntries.map((entry: RoomCalendar) => (
                                         <TableRow key={entry.id} className="group hover:bg-slate-50/50 transition-all border-slate-100">
                                             <TableCell className="py-6 pl-8">
                                                 <Badge className="bg-slate-900 text-white font-mono rounded-lg px-2 text-xs">#{entry.roomId}</Badge>

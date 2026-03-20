@@ -5,39 +5,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
     Search,
-    Download,
-    CreditCard,
-    DollarSign,
-    MoreVertical,
-    Wallet,
-    Loader2,
     CheckCircle2,
     Clock,
+    Loader2,
+    Download,
     XCircle
 } from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAllPayments } from "@/hooks/use-queries";
 import { format } from "date-fns";
 
+interface Payment {
+    id: number | string;
+    status: string;
+    provider: string;
+    amount: number;
+    currency: string;
+    user?: {
+        name?: string;
+        email?: string;
+    };
+    bookingId?: number | string;
+    createdAt: string;
+}
+
 const PaymentPage = () => {
-    const { data: payments = [], isLoading } = useAllPayments();
+    const { data: payments = [] as Payment[], isLoading } = useAllPayments();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedMethod, setSelectedMethod] = useState("All Methods");
     const [selectedStatus, setSelectedStatus] = useState("All Status");
 
     // Stats calculation
-    const completedPayments = payments.filter((p: any) => p.status === "COMPLETED");
-    const totalTransactions = payments.length;
-    const totalPaypal = completedPayments.filter((p: any) => p.provider === "PAYPAL").reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-    const totalCash = completedPayments.filter((p: any) => p.provider === "CASH").reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+    const completedPayments = (payments as Payment[]).filter((p: Payment) => p.status === "COMPLETED");
+    const totalTransactions = (payments as Payment[]).length;
+    const totalPaypal = completedPayments.filter((p: Payment) => p.provider === "PAYPAL").reduce((sum: number, p: Payment) => sum + (p.amount || 0), 0);
+    const totalCash = completedPayments.filter((p: Payment) => p.provider === "CASH").reduce((sum: number, p: Payment) => sum + (p.amount || 0), 0);
 
     // Filter logic
-    const filteredPayments = payments.filter((payment: any) => {
+    const filteredPayments = (payments as Payment[]).filter((payment: Payment) => {
         const guestName = payment.user?.name?.toLowerCase() || "";
         const guestEmail = payment.user?.email?.toLowerCase() || "";
         const paymentId = payment.id?.toString() || "";
@@ -94,22 +98,11 @@ const PaymentPage = () => {
         }
     };
 
-    const getMethodIcon = (method: string) => {
-        switch (method?.toUpperCase()) {
-            case "PAYPAL":
-                return <CreditCard className="w-3.5 h-3.5 mr-1.5" />;
-            case "CASH":
-                return <DollarSign className="w-3.5 h-3.5 mr-1.5" />;
-            default:
-                return <Wallet className="w-3.5 h-3.5 mr-1.5" />;
-        }
-    };
-
     const formatDate = (dateString: string) => {
         try {
             if (!dateString) return "N/A";
             return format(new Date(dateString), "MMM dd, yyyy");
-        } catch (e) {
+        } catch {
             return "N/A";
         }
     };
@@ -204,7 +197,7 @@ const PaymentPage = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {filteredPayments.map((payment: any) => (
+                            {filteredPayments.map((payment: Payment) => (
                                 <tr key={payment.id} className="hover:bg-slate-50/40 transition-colors group">
                                     <td className="px-4 py-2.5 whitespace-nowrap">
                                         <span className="font-bold text-slate-500 text-xs">#{payment.id}</span>

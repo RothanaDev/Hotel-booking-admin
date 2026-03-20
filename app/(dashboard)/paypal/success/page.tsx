@@ -11,17 +11,18 @@ export default function PayPalSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get("token");
+    const handleCapture = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("token");
 
-    if (!orderId) {
-      setMsg("Missing transaction token.");
-      setStatus("error");
-      return;
-    }
+      if (!orderId) {
+        setMsg("Missing transaction token.");
+        setStatus("error");
+        return;
+      }
 
-    capturePaypalOrder(orderId)
-      .then((res) => {
+      try {
+        const res = await capturePaypalOrder(orderId);
         if (res.status === "COMPLETED") {
           setStatus("success");
           setMsg("Your stay has been confirmed!");
@@ -29,12 +30,14 @@ export default function PayPalSuccessPage() {
           setStatus("error");
           setMsg(`Transaction status: ${res.status}`);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         setStatus("error");
         setMsg("We couldn't verify your payment. Please contact support.");
-      });
+      }
+    };
+
+    handleCapture();
   }, []);
 
   return (

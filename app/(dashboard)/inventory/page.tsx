@@ -11,7 +11,8 @@ import {
     Trash2,
     Package,
     AlertTriangle,
-    Box
+    Box,
+    Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -22,20 +23,21 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { Inventory } from "@/types/inventory";
 
 const InventoryPage = () => {
-    const { data: inventoryItems = [], isLoading } = useAllInventory();
+    const { data: inventoryItems = [] as Inventory[], isLoading } = useAllInventory();
     const deleteMutation = useDeleteInventory();
     const [searchTerm, setSearchTerm] = useState("");
 
     // Calculate stats
-    const totalItems = inventoryItems.length;
-    const totalStock = inventoryItems.reduce((acc: number, item: any) => acc + (item.quantity || 0), 0);
+    const totalItems = (inventoryItems as Inventory[]).length;
+    const totalStock = (inventoryItems as Inventory[]).reduce((acc: number, item: Inventory) => acc + (item.quantity || 0), 0);
     const lowStockThreshold = 50; // Mock threshold
-    const lowStockItems = inventoryItems.filter((item: any) => (item.quantity || 0) < lowStockThreshold).length;
+    const lowStockItems = (inventoryItems as Inventory[]).filter((item: Inventory) => (item.quantity || 0) < lowStockThreshold).length;
 
     // Filter items
-    const filteredItems = inventoryItems.filter((item: any) =>
+    const filteredItems = (inventoryItems as Inventory[]).filter((item: Inventory) =>
         item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -54,7 +56,7 @@ const InventoryPage = () => {
             try {
                 await deleteMutation.mutateAsync(id);
                 Swal.fire("Deleted!", "Item has been deleted.", "success");
-            } catch (error) {
+            } catch {
                 Swal.fire("Error!", "Failed to delete item.", "error");
             }
         }
@@ -65,10 +67,16 @@ const InventoryPage = () => {
         return Math.min(percentage, 100);
     };
 
-    if (isLoading) return <div className="p-10 text-center">Loading inventory...</div>;
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-slate-50/50 p-10 text-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#074868]" />
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-8 min-h-screen bg-slate-50/50">
+        <div className="space-y-8 min-h-screen bg-slate-50/50 p-4">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -140,7 +148,7 @@ const InventoryPage = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredItems.map((item: any) => {
+                            {filteredItems.map((item: Inventory) => {
                                 const minStock = 50; // Mock value
                                 const stockLevelPct = getStockLevelPercentage(item.quantity, minStock);
                                 const isLowStock = item.quantity < minStock;

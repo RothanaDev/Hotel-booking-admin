@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAllRooms, useCreateMaintenanceTicket, useUpdateMaintenanceTicket } from "@/hooks/use-queries";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Wrench, AlertCircle, CheckCircle, Clock, X, Save } from "lucide-react";
+import { Wrench, AlertCircle, CheckCircle, Clock, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { MaintenanceTicket, MaintenanceTicketCreate, MaintenanceTicketUpdate } from "@/types/maintenance";
+import type { Room } from "@/types/room";
 
 interface MaintenanceTicketFormProps {
     initialData?: MaintenanceTicket;
@@ -49,7 +49,9 @@ export default function MaintenanceTicketForm({ initialData, isEdit }: Maintenan
             if (isEdit && initialData) {
                 const payload: MaintenanceTicketUpdate = {
                     issue: formData.issue,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     priority: formData.priority as any,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     status: formData.status as any,
                     resolvedAt: formData.status === "RESOLVED" ? new Date().toISOString() : null
                 };
@@ -60,6 +62,7 @@ export default function MaintenanceTicketForm({ initialData, isEdit }: Maintenan
                     roomId: parseInt(formData.roomId),
                     reportedById: typeof user.id === 'string' ? parseInt(user.id) : user.id,
                     issue: formData.issue,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     priority: formData.priority as any,
                 };
                 await createTicket.mutateAsync(payload);
@@ -98,9 +101,9 @@ export default function MaintenanceTicketForm({ initialData, isEdit }: Maintenan
                                         required
                                     >
                                         <option value="">Select a room...</option>
-                                        {rooms.map((room: any) => (
+                                        {rooms.map((room: Room) => (
                                             <option key={room.id} value={room.id}>
-                                                Room {room.roomNumber || room.id}
+                                                Room {room.id}
                                             </option>
                                         ))}
                                     </select>
@@ -121,6 +124,7 @@ export default function MaintenanceTicketForm({ initialData, isEdit }: Maintenan
                                     id="priority"
                                     className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:ring-2 focus:ring-slate-900/10 transition-all appearance-none cursor-pointer"
                                     value={formData.priority}
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
                                 >
                                     <option value="LOW">Low Priority</option>
@@ -144,6 +148,7 @@ export default function MaintenanceTicketForm({ initialData, isEdit }: Maintenan
                                         id="status"
                                         className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:ring-2 focus:ring-slate-900/10 transition-all appearance-none cursor-pointer"
                                         value={formData.status}
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                         onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                                     >
                                         <option value="OPEN">Open</option>

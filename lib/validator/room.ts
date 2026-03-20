@@ -33,11 +33,11 @@ export const updateRoomSchema = createRoomSchema.extend({
 export interface CreateRoomFormValues {
   roomTypeId: string;
   status: string;
-  image: any;
+  image: File;
 }
 
 export interface UpdateRoomFormValues {
   roomTypeId: string;
   status: string;
-  image?: any;
+  image?: File;
 }

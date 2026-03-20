@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -10,8 +11,6 @@ import {
   CreditCard,
   Package,
   Users,
-  Shield,
-  Settings,
   ChevronRight,
   ChevronLeft,
   List,
@@ -241,9 +240,11 @@ export function SideBar({
               "relative rounded-2xl bg-white p-2 flex items-center justify-center shadow-2xl overflow-hidden border border-white/20 transition-all duration-300",
               isCollapsed ? "h-12 w-12" : "h-14 w-14"
             )}>
-              <img
+              <Image
                 src="/images/logo.png"
                 alt="RN HOTEL Logo"
+                width={56}
+                height={56}
                 className="w-full h-full object-contain"
               />
             </div>

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Package, Image as ImageIcon, X, Upload, DollarSign, Tag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import Swal from "sweetalert2";
 import { createServiceSchema, type CreateServiceFormValues } from "@/lib/validator/service";
 
@@ -27,7 +28,8 @@ export default function CreateServicePage() {
         watch,
         formState: { errors },
     } = useForm<CreateServiceFormValues>({
-        resolver: zodResolver(createServiceSchema as any),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(createServiceSchema) as any,
         defaultValues: {
             serviceName: "",
             description: "",
@@ -36,6 +38,7 @@ export default function CreateServicePage() {
         },
     });
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const watchedImage = watch("image");
 
     useEffect(() => {
@@ -89,7 +92,7 @@ export default function CreateServicePage() {
                 customClass: { popup: 'rounded-xl' }
             });
             router.push("/service");
-        } catch (error) {
+        } catch {
             Swal.fire({
                 title: "Error!",
                 text: "Failed to create service. Please try again.",
@@ -239,9 +242,10 @@ export default function CreateServicePage() {
                                     >
                                         {imagePreview ? (
                                             <>
-                                                <img
+                                                <Image
                                                     src={imagePreview}
                                                     alt="Preview"
+                                                    fill
                                                     className="absolute inset-0 w-full h-full object-cover"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">

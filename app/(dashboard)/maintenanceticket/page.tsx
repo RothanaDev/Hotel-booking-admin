@@ -36,7 +36,7 @@ export default function MaintenancePage() {
                 payload: { status, resolvedAt: status === "RESOLVED" ? new Date().toISOString() : null }
             })
             toast.success(`Ticket marked as ${status.toLowerCase()}`)
-        } catch (error) {
+        } catch {
             toast.error("Failed to update ticket")
         }
     }
@@ -61,7 +61,7 @@ export default function MaintenancePage() {
             try {
                 await deleteTicket.mutateAsync(id);
                 toast.success("Ticket deleted successfully");
-            } catch (error) {
+            } catch {
                 toast.error("Failed to delete ticket");
             }
         }

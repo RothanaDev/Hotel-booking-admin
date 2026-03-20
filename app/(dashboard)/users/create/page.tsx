@@ -51,10 +51,10 @@ export default function CreateUserPage() {
       });
 
       router.push("/users");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating user:", error);
       const errorMessage =
-        error?.response?.data?.message || "Failed to create user";
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to create user";
       Swal.fire("Error", errorMessage, "error");
     } finally {
       setIsLoading(false);

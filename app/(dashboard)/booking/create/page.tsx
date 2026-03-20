@@ -8,17 +8,24 @@ import { createPaypalOrder } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Save, Loader2, Sparkles, CheckCircle2, CreditCard, Search, User as UserIcon, BedDouble, Check, DollarSign } from "lucide-react";
+import { ChevronLeft, Loader2, Sparkles, CheckCircle2, CreditCard, Search, User as UserIcon, BedDouble, Check, DollarSign } from "lucide-react";
 import Swal from "sweetalert2";
+import type { User } from "@/types/user";
+import type { Room } from "@/types/room";
+import type { Service } from "@/types/service";
+
+interface ServiceQuantityMap {
+  [key: number]: number;
+}
 
 export default function CreateBookingPage() {
   const router = useRouter();
   const createMutation = useCreateBooking();
   const payCashMutation = usePayCash();
 
-  const { data: users = [], isLoading: isLoadingUsers } = useAllUsers();
-  const { data: rooms = [], isLoading: isLoadingRooms } = useAllRooms();
-  const { data: services = [], isLoading: isLoadingServices } = useAllServices();
+  const { data: users = [] as User[], isLoading: isLoadingUsers } = useAllUsers();
+  const { data: rooms = [] as Room[], isLoading: isLoadingRooms } = useAllRooms();
+  const { data: services = [] as Service[], isLoading: isLoadingServices } = useAllServices();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -40,7 +47,7 @@ export default function CreateBookingPage() {
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const roomDropdownRef = useRef<HTMLDivElement>(null);
 
-  const [selectedServices, setSelectedServices] = useState<{ [key: number]: number }>({}); // serviceId -> quantity
+  const [selectedServices, setSelectedServices] = useState<ServiceQuantityMap>({}); // serviceId -> quantity
 
   // Handle click outside to close dropdowns
   useEffect(() => {
@@ -57,24 +64,26 @@ export default function CreateBookingPage() {
   }, []);
 
   // Filtered lists
-  const filteredUsers = users.filter((user: any) =>
+  const filteredUsers = (users as User[]).filter((user: User) =>
     user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
   );
 
-  const availableRooms = rooms.filter((room: any) => {
+  const availableRooms = (rooms as Room[]).filter((room: Room) => {
     const status = room.status?.toUpperCase() || (room.booked ? "BOOKED" : "AVAILABLE");
     return status === "AVAILABLE";
   });
 
-  const filteredRooms = availableRooms.filter((room: any) =>
-    room.id?.toString().includes(roomSearchTerm) ||
-    (typeof room.roomType === 'object' && room.roomType?.typeName?.toLowerCase().includes(roomSearchTerm.toLowerCase()))
-  );
+  const filteredRooms = availableRooms.filter((room: Room) => {
+    const roomTypeRef = room.roomType;
+    const roomTypeName = (typeof roomTypeRef === 'object' ? roomTypeRef?.typeName : roomTypeRef) || "";
+    return room.id?.toString().includes(roomSearchTerm) ||
+      roomTypeName.toLowerCase().includes(roomSearchTerm.toLowerCase());
+  });
 
   // Selected entities for display
-  const selectedUser = users.find((u: any) => u.id === parseInt(formData.userId));
-  const selectedRoom = rooms.find((r: any) => r.id === parseInt(formData.roomId));
+  const selectedUser = (users as User[]).find((u: User) => u.id === parseInt(formData.userId));
+  const selectedRoom = (rooms as Room[]).find((r: Room) => r.id === parseInt(formData.roomId));
   const roomPrice = (typeof selectedRoom?.roomType === 'object' ? selectedRoom.roomType?.price : 0) || 0;
 
   const calculateNights = () => {
@@ -82,14 +91,15 @@ export default function CreateBookingPage() {
     const start = new Date(formData.checkin);
     const end = new Date(formData.checkout);
     const diffTime = Math.abs(end.getTime() - start.getTime());
-    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return nights > 0 ? nights : 0;
+    const nightsNum = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return nightsNum > 0 ? nightsNum : 0;
   };
   const nights = calculateNights();
   const roomTotal = roomPrice * nights;
 
   const servicesTotal = Object.entries(selectedServices).reduce((acc, [serviceId, qty]) => {
-    const service = services.find((s: any) => s.id === parseInt(serviceId));
+    const serviceItems = services as Service[];
+    const service = serviceItems.find((s: Service) => s.id === parseInt(serviceId));
     return acc + (service?.price || 0) * qty;
   }, 0);
 
@@ -130,7 +140,7 @@ export default function CreateBookingPage() {
 
     try {
       // Map selected services
-      const services = Object.entries(selectedServices).map(([serviceId, quantity]) => ({
+      const bookingServices = Object.entries(selectedServices).map(([serviceId, quantity]) => ({
         serviceId: parseInt(serviceId),
         quantity: quantity
       }));
@@ -143,10 +153,10 @@ export default function CreateBookingPage() {
         checkout: formData.checkout,
         numOfAdults: Number(formData.numOfAdults),
         numOfChildren: Number(formData.numOfChildren),
-        services: services
+        services: bookingServices
       });
 
-      const bookingId = result?.id ?? result?.bookingId ?? result?.data?.id ?? result?.booking?.id;
+      const bookingId = result?.id ?? result?.bookingId ?? (result as { data?: { id?: number } })?.data?.id ?? (result as { booking?: { id?: number } })?.booking?.id;
 
       if (!bookingId) {
         throw new Error("Booking created but bookingId not found in response.");
@@ -169,9 +179,9 @@ export default function CreateBookingPage() {
         Swal.fire("Success!", "Booking created successfully. Payment will be collected at the hotel.", "success");
         router.push("/booking");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error processing booking:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to process booking";
+      const errorMessage = (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (error as { message?: string })?.message || "Failed to process booking";
       Swal.fire("Error", errorMessage, "error");
       setIsRedirecting(false);
     } finally {
@@ -241,7 +251,7 @@ export default function CreateBookingPage() {
                   {isUserDropdownOpen && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
                       {filteredUsers.length > 0 ? (
-                        filteredUsers.map((user: any) => (
+                        filteredUsers.map((user: User) => (
                           <div
                             key={user.id}
                             className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-none transition-colors"
@@ -297,7 +307,7 @@ export default function CreateBookingPage() {
                   {isRoomDropdownOpen && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
                       {filteredRooms.length > 0 ? (
-                        filteredRooms.map((room: any) => (
+                        filteredRooms.map((room: Room) => (
                           <div
                             key={room.id}
                             className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-none transition-colors"
@@ -380,7 +390,7 @@ export default function CreateBookingPage() {
             </div>
             <div className="p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {services.map((service: any) => {
+                {(services as Service[]).map((service: Service) => {
                   const isSelected = !!selectedServices[service.id];
                   return (
                     <div
@@ -459,7 +469,7 @@ export default function CreateBookingPage() {
                   <p className="text-sm text-slate-400 italic">No services selected</p>
                 ) : (
                   Object.entries(selectedServices).map(([id, qty]) => {
-                    const s = services.find((srv: any) => srv.id === parseInt(id));
+                    const s = (services as Service[]).find((srv: Service) => srv.id === parseInt(id));
                     if (!s) return null;
                     return (
                       <div key={id} className="flex justify-between text-sm">

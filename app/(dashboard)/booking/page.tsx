@@ -24,9 +24,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAllBookings, useDeleteBooking, useCreatePaypalOrder, usePayCash } from "@/hooks/use-queries";
 import Swal from "sweetalert2";
+import type { Booking } from "@/types/booking";
 
 export default function BookingsPage() {
-  const { data: bookings = [], isLoading } = useAllBookings();
+  const { data: bookings = [] as Booking[], isLoading } = useAllBookings();
   const deleteMutation = useDeleteBooking();
   const paypalMutation = useCreatePaypalOrder();
   const cashMutation = usePayCash();
@@ -48,7 +49,7 @@ export default function BookingsPage() {
       try {
         await deleteMutation.mutateAsync(id);
         Swal.fire("Deleted!", "Booking has been deleted.", "success");
-      } catch (error) {
+      } catch {
         Swal.fire("Error!", "Failed to delete booking.", "error");
       }
     }
@@ -107,9 +108,10 @@ export default function BookingsPage() {
   const itemsPerPage = 8;
 
   // Filter bookings
-  const filteredBookings = bookings.filter((booking: any) => {
+  const filteredBookings = (bookings as Booking[]).filter((booking: Booking) => {
     const guestName = booking.userResponse?.name?.toLowerCase() || "";
-    const roomName = (typeof booking.roomResponse?.roomType === 'object' ? booking.roomResponse?.roomType?.typeName : booking.roomResponse?.roomType)?.toLowerCase() || "";
+    const roomTypeRef = booking.roomResponse?.roomType;
+    const roomName = (typeof roomTypeRef === 'object' ? roomTypeRef?.typeName : roomTypeRef)?.toLowerCase() || "";
     const matchesSearch =
       guestName.includes(searchTerm.toLowerCase()) ||
       roomName.includes(searchTerm.toLowerCase()) ||
@@ -157,7 +159,7 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="space-y-8 min-h-screen bg-slate-50/50 ">
+    <div className="space-y-8 min-h-screen bg-slate-50/50 p-4">
 
       {/* Header */}
       <div className="space-y-4">
@@ -220,81 +222,86 @@ export default function BookingsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedBookings.map((booking: any) => (
-                <tr key={booking.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="font-medium text-slate-600">#{String(booking.id).padStart(4, '0')}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <p className="font-semibold text-slate-900">{booking.userResponse?.name || "Unknown Guest"}</p>
-                      <p className="text-xs text-slate-500">{booking.userResponse?.email}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <p className="font-medium text-slate-900">Room {booking.roomResponse?.id}</p>
-                      <p className="text-xs text-slate-500">{(typeof booking.roomResponse?.roomType === 'object' ? booking.roomResponse?.roomType?.typeName : booking.roomResponse?.roomType)}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-slate-600 font-medium">{booking.checkin}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-slate-600 font-medium">{booking.checkout}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-slate-600">
-                      <Users className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-                      <span className="text-sm font-medium">
-                        {booking.numOfAdults}A
-                        {booking.numOfChildren > 0 && ` + ${booking.numOfChildren}C`}
+              {paginatedBookings.map((booking: Booking) => {
+                const roomTypeRef = booking.roomResponse?.roomType;
+                const roomTypeName = (typeof roomTypeRef === 'object' ? roomTypeRef?.typeName : roomTypeRef);
+
+                return (
+                  <tr key={booking.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-medium text-slate-600">#{String(booking.id).padStart(4, '0')}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <p className="font-semibold text-slate-900">{booking.userResponse?.name || "Unknown Guest"}</p>
+                        <p className="text-xs text-slate-500">{booking.userResponse?.email}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <p className="font-medium text-slate-900">Room {booking.roomResponse?.id}</p>
+                        <p className="text-xs text-slate-500">{roomTypeName}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-slate-600 font-medium">{booking.checkin}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-slate-600 font-medium">{booking.checkout}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-slate-600">
+                        <Users className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                        <span className="text-sm font-medium">
+                          {booking.numOfAdults}A
+                          {booking.numOfChildren > 0 && ` + ${booking.numOfChildren}C`}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-bold text-slate-900">${booking.amount?.toLocaleString()}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
+                        {booking.status}
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="font-bold text-slate-900">${booking.amount?.toLocaleString()}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
-                      {booking.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                        {booking.status?.toLowerCase() === 'pending' && (
-                          <>
-                            <DropdownMenuItem
-                              className="cursor-pointer font-medium p-2.5 text-emerald-600 focus:text-emerald-600"
-                              onClick={() => handlePay(booking.id)}
-                            >
-                              <CreditCard className="mr-2 h-4 w-4" /> Pay with PayPal
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer font-medium p-2.5 text-emerald-600 focus:text-emerald-600"
-                              onClick={() => handlePayCash(booking.id)}
-                            >
-                              <DollarSign className="mr-2 h-4 w-4" /> Pay with Cash
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        <DropdownMenuItem
-                          className="cursor-pointer font-medium p-2.5 text-rose-600 focus:text-rose-600"
-                          onClick={() => handleDelete(booking.id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                          {booking.status?.toLowerCase() === 'pending' && (
+                            <>
+                              <DropdownMenuItem
+                                className="cursor-pointer font-medium p-2.5 text-emerald-600 focus:text-emerald-600"
+                                onClick={() => handlePay(booking.id)}
+                              >
+                                <CreditCard className="mr-2 h-4 w-4" /> Pay with PayPal
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer font-medium p-2.5 text-emerald-600 focus:text-emerald-600"
+                                onClick={() => handlePayCash(booking.id)}
+                              >
+                                <DollarSign className="mr-2 h-4 w-4" /> Pay with Cash
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          <DropdownMenuItem
+                            className="cursor-pointer font-medium p-2.5 text-rose-600 focus:text-rose-600"
+                            onClick={() => handleDelete(booking.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                );
+              })}
 
               {paginatedBookings.length === 0 && (
                 <tr>

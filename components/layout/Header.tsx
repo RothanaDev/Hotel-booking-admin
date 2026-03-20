@@ -1,19 +1,17 @@
 "use client";
-import { Bell, Menu, User, Settings, LogOut, ChevronDown, Search } from "lucide-react";
+import { Menu, LogOut, ChevronDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "../ui/input";
+import { AuthUser } from "@/types/auth";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user: currentUser, logout } = useAuth();
-  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const getInitials = (user: any) => {
+  const getInitials = (user: AuthUser | null) => {
     if (!user) return "U";
     const name = user.name || user.email || "";
 
@@ -31,12 +29,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     return "U";
   };
 
-  const getDisplayName = (user: any) => {
+  const getDisplayName = (user: AuthUser | null) => {
     if (!user) return "Guest";
     return user.name || user.email?.split('@')[0] || "Guest";
   };
 
-  const getDisplayEmail = (user: any) => {
+  const getDisplayEmail = (user: AuthUser | null) => {
     return user?.email || "";
   };
 

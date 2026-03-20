@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -11,7 +11,8 @@ import {
     Edit,
     Trash2,
     DollarSign,
-    Package
+    Package,
+    Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +44,6 @@ import {
     useUpdateRoomType,
     useDeleteRoomType
 } from "@/hooks/use-queries";
-import { Loader2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { roomTypeSchema, type RoomTypeFormValues } from "@/lib/validator/room-type";
 
@@ -63,12 +63,13 @@ export default function RoomTypePage() {
         reset,
         formState: { errors },
     } = useForm<RoomTypeFormValues>({
-        resolver: zodResolver(roomTypeSchema as any),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(roomTypeSchema) as any,
     });
 
-    const filteredTypes = roomTypes.filter((type: RoomType) =>
-        type.typeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        type.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredTypes = (roomTypes as RoomType[]).filter((type: RoomType) =>
+        (type.typeName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (type.description || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleOpenCreate = () => {
@@ -123,7 +124,7 @@ export default function RoomTypePage() {
                         popup: 'rounded-xl shadow-xl'
                     }
                 });
-            } catch (err: any) {
+            } catch {
                 Swal.fire({
                     title: "Action Restricted",
                     text: "This room type cannot be deleted. It might be linked to existing rooms.",
@@ -158,7 +159,7 @@ export default function RoomTypePage() {
                     popup: 'rounded-xl shadow-xl'
                 }
             });
-        } catch (err: any) {
+        } catch {
             Swal.fire({
                 title: "Error!",
                 text: "Failed to save room type. Please check your data.",

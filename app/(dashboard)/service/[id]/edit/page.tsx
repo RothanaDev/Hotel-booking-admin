@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Package, Image as ImageIcon, X, Upload, Save, Loader2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 import Swal from "sweetalert2";
 
 export default function EditServicePage() {
@@ -36,22 +37,24 @@ export default function EditServicePage() {
         imagePreview: "",
     });
 
-    useEffect(() => {
-        if (service) {
-            let preview = "";
-            if (service.image) preview = service.image;
-            else if (service.photo) preview = `data:image/jpeg;base64,${service.photo}`;
+    const [lastServiceId, setLastServiceId] = useState<string | number | null>(null);
 
-            setFormData({
-                serviceName: service.serviceName || "",
-                description: service.description || "",
-                price: service.price ? String(service.price) : "",
-                category: service.category || "Dining",
-                imageFile: null,
-                imagePreview: preview
-            });
-        }
-    }, [service]);
+    // Sync service data to form state during render
+    if (service && service.id !== lastServiceId) {
+        let preview = "";
+        if (service.image) preview = service.image;
+        else if (service.photo) preview = `data:image/jpeg;base64,${service.photo}`;
+
+        setFormData({
+            serviceName: service.serviceName || "",
+            description: service.description || "",
+            price: service.price ? String(service.price) : "",
+            category: service.category || "Dining",
+            imageFile: null,
+            imagePreview: preview
+        });
+        setLastServiceId(service.id);
+    }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -127,7 +130,7 @@ export default function EditServicePage() {
                 customClass: { popup: 'rounded-xl' }
             });
             router.push("/service");
-        } catch (error) {
+        } catch {
             Swal.fire({
                 title: "Error!",
                 text: "Failed to update service.",
@@ -288,9 +291,10 @@ export default function EditServicePage() {
                                     >
                                         {formData.imagePreview ? (
                                             <>
-                                                <img
+                                                <Image
                                                     src={formData.imagePreview}
                                                     alt="Preview"
+                                                    fill
                                                     className="absolute inset-0 w-full h-full object-cover"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">

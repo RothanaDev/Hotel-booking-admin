@@ -37,7 +37,7 @@ export default function HousekeepingPage() {
                 payload: { status }
             })
             toast.success(`Task marked as ${status.toLowerCase()}`)
-        } catch (error) {
+        } catch {
             toast.error("Failed to update task")
         }
     }
@@ -62,7 +62,7 @@ export default function HousekeepingPage() {
             try {
                 await deleteTask.mutateAsync(id);
                 toast.success("Task deleted successfully");
-            } catch (error) {
+            } catch {
                 toast.error("Failed to delete task");
             }
         }

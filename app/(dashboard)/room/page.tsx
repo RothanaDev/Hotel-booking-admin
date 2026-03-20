@@ -13,10 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Swal from "sweetalert2";
+import Image from "next/image";
+import type { Room } from "@/types/room";
+import type { RoomType } from "@/types/room-type";
 
 export default function ListRoomPage() {
-  const { data: rooms = [], isLoading: isLoadingRooms } = useAllRooms();
-  const { data: roomTypes = [] } = useAllRoomTypes();
+  const { data: rooms = [] as Room[], isLoading: isLoadingRooms } = useAllRooms();
+  const { data: roomTypes = [] as RoomType[] } = useAllRoomTypes();
   const deleteMutation = useDeleteRoom();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,7 +27,7 @@ export default function ListRoomPage() {
   const [selectedRoomType, setSelectedRoomType] = useState("All");
 
   // Filtering Logic
-  const filteredRooms = rooms.filter((room: any) => {
+  const filteredRooms = (rooms as Room[]).filter((room: Room) => {
     // 1. Search Filter
     const roomTypeName = typeof room.roomType === 'object' ? room.roomType?.typeName : room.roomType;
     const matchesSearch = (String(roomTypeName || "").toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -42,7 +45,7 @@ export default function ListRoomPage() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const handleDelete = async (roomId: string) => {
+  const handleDelete = async (roomId: string | number) => {
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "This room will be permanently deleted!",
@@ -63,7 +66,7 @@ export default function ListRoomPage() {
 
     if (result.isConfirmed) {
       try {
-        await deleteMutation.mutateAsync(roomId);
+        await deleteMutation.mutateAsync(String(roomId));
         Swal.fire({
           title: "Deleted!",
           text: "Room has been removed.",
@@ -77,7 +80,7 @@ export default function ListRoomPage() {
             htmlContainer: 'text-sm text-slate-600'
           }
         });
-      } catch (err) {
+      } catch {
         Swal.fire({
           title: "Error!",
           text: "Failed to delete room.",
@@ -152,7 +155,7 @@ export default function ListRoomPage() {
             onChange={(e) => setSelectedRoomType(e.target.value)}
           >
             <option value="All">All Types</option>
-            {roomTypes.map((type: any) => (
+            {(roomTypes as RoomType[]).map((type: RoomType) => (
               <option key={type.id} value={type.typeName}>{type.typeName}</option>
             ))}
           </select>
@@ -162,7 +165,7 @@ export default function ListRoomPage() {
 
       {/* Room Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredRooms.map((room: any) => {
+        {filteredRooms.map((room: Room) => {
           const status = room.status?.toUpperCase() || (room.booked ? "BOOKED" : "AVAILABLE");
 
           let statusColor = "bg-emerald-400";
@@ -181,16 +184,18 @@ export default function ListRoomPage() {
 
           const roomTypeStr = typeof room.roomType === 'object' ? room.roomType?.typeName : room.roomType;
           const roomDescription = typeof room.roomType === 'object' ? room.roomType?.description : "Comfortable room with essential amenities";
-          const price = room.roomPrice || (typeof room.roomType === 'object' ? room.roomType?.price : 0);
+          const price = room.roomPrice || (typeof room.roomType === 'object' ? (room.roomType as RoomType)?.price : 0);
 
           return (
             <div key={room.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col">
               {/* Image Section */}
               <div className="relative h-40 w-full bg-slate-100 overflow-hidden">
                 {room.image || room.photo ? (
-                  <img
-                    src={room.image || `data:image/jpeg;base64,${room.photo}`}
-                    alt={roomTypeStr}
+                  <Image
+                    src={(room.image || `data:image/jpeg;base64,${room.photo}`) as string}
+                    alt={roomTypeStr || "Room"}
+                    width={400}
+                    height={160}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 ) : (
@@ -272,4 +277,4 @@ export default function ListRoomPage() {
       </div>
     </div>
   );
-}
+}

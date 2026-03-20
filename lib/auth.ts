@@ -43,7 +43,7 @@ export const isAuthenticated = async () => {
   try {
     const me = await api.getMe();
     return !!me;
-  } catch (err) {
+  } catch {
     return false;
   }
 };

@@ -2,15 +2,18 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as api from "@/lib/api"
+import { RoomTypeFormValues } from "@/lib/validator/room-type";
 import type { Room } from "@/types/room";
-import { addRoom } from "@/lib/api";
-import type { HousekeepingTask, HousekeepingTaskCreate, HousekeepingTaskUpdate } from "@/types/housekeeping";
-import type { MaintenanceTicket, MaintenanceTicketCreate, MaintenanceTicketUpdate } from "@/types/maintenance";
-import type { RoomCalendar, RoomCalendarCreate, RoomCalendarUpdate } from "@/types/roomCalendar";
+import type { User } from "@/types/user";
+import type { RoomType } from "@/types/room-type";
+import type { RoomCalendarCreate, RoomCalendarUpdate } from "@/types/roomCalendar";
+import type { BookingCreateRequest, BookingUpdateRequest } from "@/types/booking";
+import type { HousekeepingTaskCreate, HousekeepingTaskUpdate } from "@/types/housekeeping";
+import type { MaintenanceTicketCreate, MaintenanceTicketUpdate } from "@/types/maintenance";
 
 
 export function useAllUsers() {
-  const { data = [], isLoading, error } = useQuery({
+  const { data = [], isLoading, error } = useQuery<User[]>({
     queryKey: ["all-users"],
     queryFn: api.getAllUsers,
   });
@@ -21,7 +24,7 @@ export function useRegisterUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (registrationDetails: any) => api.registerUser(registrationDetails),
+    mutationFn: (registrationDetails: Record<string, unknown>) => api.registerUser(registrationDetails),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-users"] });
     },
@@ -57,11 +60,11 @@ export function useAddRoom() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (formData: FormData) => addRoom(formData),
+    mutationFn: (formData: FormData) => api.addRoom(formData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
     },
-    onError: (err: unknown) => {
+    onError: () => {
 
     },
   });
@@ -76,7 +79,7 @@ export function useDeleteRoom() {
       // Refresh rooms table
       queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
     },
-    onError: (err: unknown) => {
+    onError: () => {
 
     },
   });
@@ -91,15 +94,16 @@ export function useUpdateRoom() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
     },
-    onError: (err: unknown) => {
+    onError: () => {
     },
   });
 }
 
+
 export function useCreateBooking() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (bookingData: any) => api.createBooking(bookingData),
+    mutationFn: (bookingData: BookingCreateRequest) => api.createBooking(bookingData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
@@ -113,7 +117,7 @@ export function useCreateBooking() {
 export function useUpdateBooking() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, bookingData }: { id: string | number; bookingData: any }) =>
+    mutationFn: ({ id, bookingData }: { id: string | number; bookingData: BookingUpdateRequest }) =>
       api.updateBooking(id, bookingData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
@@ -178,7 +182,7 @@ export function useServiceBooking(id: string | number) {
 export function useCreateServiceBooking() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => api.createServiceBooking(data),
+    mutationFn: (data: Record<string, unknown>) => api.createServiceBooking(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
     },
@@ -188,7 +192,7 @@ export function useCreateServiceBooking() {
 export function useUpdateServiceBooking() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string | number; data: Record<string, unknown> }) =>
       api.updateServiceBooking(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
@@ -211,7 +215,7 @@ export function useDeleteUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userId: string) => api.deleteUser(userId),
+    mutationFn: (userId: string | number) => api.deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-users"] });
     },
@@ -231,7 +235,7 @@ export function useUser(userId: string) {
 }
 
 export function useAllRoomTypes() {
-  const { data = [], isLoading, error } = useQuery({
+  const { data = [], isLoading, error } = useQuery<RoomType[]>({
     queryKey: ["room-types"],
     queryFn: api.getAllRoomTypes,
   });
@@ -241,7 +245,7 @@ export function useAllRoomTypes() {
 export function useCreateRoomType() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (roomTypeData: any) => api.createRoomType(roomTypeData),
+    mutationFn: (roomTypeData: RoomTypeFormValues) => api.createRoomType(roomTypeData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["room-types"] });
     },
@@ -251,7 +255,7 @@ export function useCreateRoomType() {
 export function useUpdateRoomType() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, roomTypeData }: { id: string | number; roomTypeData: any }) =>
+    mutationFn: ({ id, roomTypeData }: { id: string | number; roomTypeData: RoomTypeFormValues }) =>
       api.updateRoomType(id, roomTypeData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["room-types"] });
@@ -344,7 +348,7 @@ export function useInventory(id: string | number) {
 export function useCreateInventory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => api.createInventory(data),
+    mutationFn: (data: Record<string, unknown>) => api.createInventory(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-inventory"] });
     },
@@ -354,7 +358,7 @@ export function useCreateInventory() {
 export function useUpdateInventory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string | number; data: Record<string, unknown> }) =>
       api.updateInventory(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-inventory"] });

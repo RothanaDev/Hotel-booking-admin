@@ -24,21 +24,23 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Image from "next/image";
+import type { Service } from "@/types/service";
 
 const ServicesPage = () => {
-    const { data: services = [], isLoading } = useAllServices();
+    const { data: services = [] as Service[], isLoading } = useAllServices();
     const deleteMutation = useDeleteService();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
 
     // Calculate stats
-    const totalServices = services.length;
+    const totalServices = (services as Service[]).length;
     const averagePrice = totalServices > 0
-        ? services.reduce((acc: number, curr: any) => acc + (Number(curr.price) || 0), 0) / totalServices
+        ? (services as Service[]).reduce((acc: number, curr: Service) => acc + (Number(curr.price) || 0), 0) / totalServices
         : 0;
 
     // Filtering
-    const filteredServices = services.filter((service: any) => {
+    const filteredServices = (services as Service[]).filter((service: Service) => {
         const matchesSearch = service.serviceName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === "All" || service.category === selectedCategory;
         return matchesSearch && matchesCategory;
@@ -59,7 +61,7 @@ const ServicesPage = () => {
             try {
                 await deleteMutation.mutateAsync(id);
                 Swal.fire("Deleted!", "Service has been deleted.", "success");
-            } catch (error) {
+            } catch {
                 Swal.fire("Error!", "Failed to delete service.", "error");
             }
         }
@@ -92,7 +94,7 @@ const ServicesPage = () => {
     if (isLoading) return <div className="p-10 text-center">Loading services...</div>;
 
     return (
-        <div className="space-y-8 min-h-screen bg-slate-50/50">
+        <div className="space-y-8 min-h-screen bg-slate-50/50 p-4">
 
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -111,7 +113,7 @@ const ServicesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <p className="text-slate-500 text-sm font-medium">Total Services</p>
-                    <h3 className="text-3xl font-bold text-slate-900 mt-2">{services.length}</h3>
+                    <h3 className="text-3xl font-bold text-slate-900 mt-2">{totalServices}</h3>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <p className="text-slate-500 text-sm font-medium">Average Price</p>
@@ -149,15 +151,17 @@ const ServicesPage = () => {
 
             {/* Services Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredServices.map((service: any) => (
+                {filteredServices.map((service: Service) => (
                     <div key={service.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col">
 
                         {/* Image */}
                         <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
                             {service.image || service.photo ? (
-                                <img
-                                    src={service.image || `data:image/jpeg;base64,${service.photo}`}
+                                <Image
+                                    src={(service.image || `data:image/jpeg;base64,${service.photo}`) as string}
                                     alt={service.serviceName}
+                                    width={400}
+                                    height={192}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                             ) : (
