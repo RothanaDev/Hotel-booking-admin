@@ -26,7 +26,7 @@ export default function CreateRoomPage() {
     watch,
     formState: { errors },
   } = useForm<CreateRoomFormValues>({
-    resolver: zodResolver(createRoomSchema),
+    resolver: zodResolver(createRoomSchema as any),
     defaultValues: {
       roomTypeId: "",
       status: "Available",

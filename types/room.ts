@@ -1,11 +1,8 @@
+import { RoomType } from "./room-type";
+
 export interface Room {
   id: string | number;
-  roomType: string | {
-    id: string | number;
-    typeName: string;
-    description?: string;
-    price?: number;
-  };
+  roomType: RoomType;
   roomPrice?: number;
   status?: string;
   booked?: boolean;

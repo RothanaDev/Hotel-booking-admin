@@ -63,7 +63,7 @@ export default function RoomTypePage() {
         reset,
         formState: { errors },
     } = useForm<RoomTypeFormValues>({
-        resolver: zodResolver(roomTypeSchema),
+        resolver: zodResolver(roomTypeSchema as any),
     });
 
     const filteredTypes = roomTypes.filter((type: RoomType) =>

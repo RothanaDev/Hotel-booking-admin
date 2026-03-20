@@ -109,7 +109,7 @@ export default function BookingsPage() {
   // Filter bookings
   const filteredBookings = bookings.filter((booking: any) => {
     const guestName = booking.userResponse?.name?.toLowerCase() || "";
-    const roomName = booking.roomResponse?.roomType?.typeName?.toLowerCase() || "";
+    const roomName = (typeof booking.roomResponse?.roomType === 'object' ? booking.roomResponse?.roomType?.typeName : booking.roomResponse?.roomType)?.toLowerCase() || "";
     const matchesSearch =
       guestName.includes(searchTerm.toLowerCase()) ||
       roomName.includes(searchTerm.toLowerCase()) ||
@@ -234,7 +234,7 @@ export default function BookingsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <p className="font-medium text-slate-900">Room {booking.roomResponse?.id}</p>
-                      <p className="text-xs text-slate-500">{booking.roomResponse?.roomType?.typeName}</p>
+                      <p className="text-xs text-slate-500">{(typeof booking.roomResponse?.roomType === 'object' ? booking.roomResponse?.roomType?.typeName : booking.roomResponse?.roomType)}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

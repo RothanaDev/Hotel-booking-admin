@@ -69,13 +69,13 @@ export default function CreateBookingPage() {
 
   const filteredRooms = availableRooms.filter((room: any) =>
     room.id?.toString().includes(roomSearchTerm) ||
-    room.roomType?.typeName?.toLowerCase().includes(roomSearchTerm.toLowerCase())
+    (typeof room.roomType === 'object' && room.roomType?.typeName?.toLowerCase().includes(roomSearchTerm.toLowerCase()))
   );
 
   // Selected entities for display
   const selectedUser = users.find((u: any) => u.id === parseInt(formData.userId));
   const selectedRoom = rooms.find((r: any) => r.id === parseInt(formData.roomId));
-  const roomPrice = selectedRoom?.roomType?.price || 0;
+  const roomPrice = (typeof selectedRoom?.roomType === 'object' ? selectedRoom.roomType?.price : 0) || 0;
 
   const calculateNights = () => {
     if (!formData.checkin || !formData.checkout) return 0;
@@ -282,7 +282,7 @@ export default function CreateBookingPage() {
                       id="roomSearch"
                       placeholder="Search room # or type..."
                       className="pl-10 h-11 rounded-xl border-slate-200 focus:border-[#ffa500] focus:ring-[#ffa500]"
-                      value={isRoomDropdownOpen ? roomSearchTerm : (selectedRoom ? `Room ${selectedRoom.id} - ${selectedRoom.roomType?.typeName}` : "")}
+                      value={isRoomDropdownOpen ? roomSearchTerm : (selectedRoom ? `Room ${selectedRoom.id} - ${(typeof selectedRoom.roomType === 'object' ? selectedRoom.roomType?.typeName : selectedRoom.roomType)}` : "")}
                       onFocus={() => {
                         setIsRoomDropdownOpen(true);
                         setRoomSearchTerm("");
@@ -313,7 +313,7 @@ export default function CreateBookingPage() {
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-sm font-semibold text-slate-900">Room {room.id}</span>
-                                <span className="text-xs text-slate-500">{room.roomType?.typeName} — ${room.roomType?.price}/night</span>
+                                <span className="text-xs text-slate-500">{(typeof room.roomType === 'object' ? room.roomType?.typeName : room.roomType)} — ${(typeof room.roomType === 'object' ? room.roomType?.price : 0)}/night</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -443,7 +443,7 @@ export default function CreateBookingPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Room</span>
                   <span className="font-medium text-slate-900 text-right max-w-[60%] truncate">
-                    {selectedRoom ? `Room ${selectedRoom.id} - ${selectedRoom.roomType?.typeName}` : "-"}
+                    {selectedRoom ? `Room ${selectedRoom.id} - ${(typeof selectedRoom.roomType === 'object' ? selectedRoom.roomType?.typeName : selectedRoom.roomType)}` : "-"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

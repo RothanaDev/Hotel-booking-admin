@@ -27,7 +27,7 @@ export default function CreateServicePage() {
         watch,
         formState: { errors },
     } = useForm<CreateServiceFormValues>({
-        resolver: zodResolver(createServiceSchema),
+        resolver: zodResolver(createServiceSchema as any),
         defaultValues: {
             serviceName: "",
             description: "",

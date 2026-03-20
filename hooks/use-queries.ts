@@ -221,6 +221,15 @@ export function useDeleteUser() {
   });
 }
 
+export function useUser(userId: string) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["user", userId],
+    queryFn: () => api.getUser(userId),
+    enabled: !!userId,
+  });
+  return { data, isLoading, error };
+}
+
 export function useAllRoomTypes() {
   const { data = [], isLoading, error } = useQuery({
     queryKey: ["room-types"],

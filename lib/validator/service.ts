@@ -6,7 +6,7 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 export const createServiceSchema = z.object({
     serviceName: z.string().min(1, "Service name is required"),
     description: z.string().optional(),
-    price: z.coerce.number({ invalid_type_error: "Price must be a number" }).positive("Price must be greater than 0"),
+    price: z.coerce.number().positive("Price must be greater than 0"),
     category: z.string().min(1, "Category is required"),
     image: z
         .any()
@@ -30,5 +30,18 @@ export const updateServiceSchema = createServiceSchema.extend({
         .optional(),
 });
 
-export type CreateServiceFormValues = z.infer<typeof createServiceSchema>;
-export type UpdateServiceFormValues = z.infer<typeof updateServiceSchema>;
+export interface CreateServiceFormValues {
+    serviceName: string;
+    description?: string;
+    price: number;
+    category: string;
+    image: any;
+}
+
+export interface UpdateServiceFormValues {
+    serviceName: string;
+    description?: string;
+    price: number;
+    category: string;
+    image?: any;
+}

@@ -181,7 +181,7 @@ export default function ListRoomPage() {
 
           const roomTypeStr = typeof room.roomType === 'object' ? room.roomType?.typeName : room.roomType;
           const roomDescription = typeof room.roomType === 'object' ? room.roomType?.description : "Comfortable room with essential amenities";
-          const price = room.roomPrice || room.roomType?.price;
+          const price = room.roomPrice || (typeof room.roomType === 'object' ? room.roomType?.price : 0);
 
           return (
             <div key={room.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col">

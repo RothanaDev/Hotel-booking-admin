@@ -30,5 +30,14 @@ export const updateRoomSchema = createRoomSchema.extend({
     .optional(),
 });
 
-export type CreateRoomFormValues = z.infer<typeof createRoomSchema>;
-export type UpdateRoomFormValues = z.infer<typeof updateRoomSchema>;
+export interface CreateRoomFormValues {
+  roomTypeId: string;
+  status: string;
+  image: any;
+}
+
+export interface UpdateRoomFormValues {
+  roomTypeId: string;
+  status: string;
+  image?: any;
+}
