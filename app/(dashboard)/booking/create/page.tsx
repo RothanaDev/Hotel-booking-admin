@@ -28,7 +28,7 @@ export default function CreateBookingPage() {
   const { data: services = [] as Service[], isLoading: isLoadingServices } = useAllServices();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [loadingMethod, setLoadingMethod] = useState<"PAYPAL" | "CASH" | "PENDING" | null>(null);
   const [formData, setFormData] = useState({
     userId: "",
     roomId: "",
@@ -37,6 +37,9 @@ export default function CreateBookingPage() {
     numOfAdults: 1,
     numOfChildren: 0
   });
+
+  const todayObj = new Date();
+  const todayStr = new Date(todayObj.getTime() - todayObj.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
   // Search and selector states
   const [userSearchTerm, setUserSearchTerm] = useState("");
@@ -136,7 +139,18 @@ export default function CreateBookingPage() {
       return;
     }
 
+    if (formData.checkin < todayStr) {
+      Swal.fire("Error", "Check-in date cannot be in the past", "error");
+      return;
+    }
+
+    if (formData.checkout < formData.checkin) {
+      Swal.fire("Error", "Check-out date must be after or equal to check-in date", "error");
+      return;
+    }
+
     setIsLoading(true);
+    setLoadingMethod(method);
 
     try {
       // Map selected services
@@ -163,7 +177,6 @@ export default function CreateBookingPage() {
       }
 
       if (method === "PAYPAL") {
-        setIsRedirecting(true);
         // 2. Create PayPal Order
         const { approvalUrl } = await createPaypalOrder(bookingId);
         if (!approvalUrl) throw new Error("PayPal approval url not found!");
@@ -183,9 +196,9 @@ export default function CreateBookingPage() {
       console.error("Error processing booking:", error);
       const errorMessage = (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (error as { message?: string })?.message || "Failed to process booking";
       Swal.fire("Error", errorMessage, "error");
-      setIsRedirecting(false);
     } finally {
       setIsLoading(false);
+      setLoadingMethod(null);
     }
   };
 
@@ -346,11 +359,33 @@ export default function CreateBookingPage() {
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="checkin" className="text-slate-700">Check-in Date *</Label>
-                  <Input id="checkin" name="checkin" type="date" value={formData.checkin} onChange={handleChange} className="h-11 rounded-xl" />
+                  <Input 
+                    id="checkin" 
+                    name="checkin" 
+                    type="date" 
+                    min={todayStr}
+                    value={formData.checkin} 
+                    onChange={handleChange} 
+                    className={`h-11 rounded-xl ${(formData.checkin && formData.checkin < todayStr) ? 'border-red-500 focus-visible:ring-red-500' : ''}`} 
+                  />
+                  {(formData.checkin && formData.checkin < todayStr) && (
+                    <p className="text-sm text-red-500 mt-1">Check-in date cannot be in the past.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="checkout" className="text-slate-700">Check-out Date *</Label>
-                  <Input id="checkout" name="checkout" type="date" value={formData.checkout} onChange={handleChange} className="h-11 rounded-xl" />
+                  <Input 
+                    id="checkout" 
+                    name="checkout" 
+                    type="date" 
+                    min={formData.checkin || todayStr}
+                    value={formData.checkout} 
+                    onChange={handleChange} 
+                    className={`h-11 rounded-xl ${(formData.checkout && formData.checkout < (formData.checkin || todayStr)) ? 'border-red-500 focus-visible:ring-red-500' : ''}`} 
+                  />
+                  {(formData.checkout && formData.checkout < (formData.checkin || todayStr)) && (
+                    <p className="text-sm text-red-500 mt-1">Check-out date must be valid.</p>
+                  )}
                 </div>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
@@ -491,13 +526,9 @@ export default function CreateBookingPage() {
                 <Button
                   className="w-full bg-[#074868] hover:bg-[#05364d] h-12 text-lg font-semibold shadow-xl shadow-blue-900/10"
                   onClick={() => handleSubmit("PAYPAL")}
-                  disabled={isLoading || isRedirecting}
+                  disabled={isLoading}
                 >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin" /> Processing...
-                    </div>
-                  ) : isRedirecting ? (
+                  {isLoading && loadingMethod === "PAYPAL" ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" /> Redirecting to PayPal...
                     </div>
@@ -512,14 +543,22 @@ export default function CreateBookingPage() {
                   variant="outline"
                   className="w-full border-emerald-500 text-emerald-600 hover:bg-emerald-50 h-12 text-lg font-semibold"
                   onClick={() => handleSubmit("CASH")}
-                  disabled={isLoading || isRedirecting}
+                  disabled={isLoading}
                 >
-                  <DollarSign className="mr-2 h-5 w-5" /> Pay with Cash
+                  {isLoading && loadingMethod === "CASH" ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" /> Processing Cash...
+                    </div>
+                  ) : (
+                    <>
+                      <DollarSign className="mr-2 h-5 w-5" /> Pay with Cash
+                    </>
+                  )}
                 </Button>
 
               </div>
 
-              {isRedirecting && (
+              {isLoading && loadingMethod === "PAYPAL" && (
                 <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full border-2 border-blue-200 border-t-blue-600 animate-spin shrink-0" />
                   <div className="text-sm">
